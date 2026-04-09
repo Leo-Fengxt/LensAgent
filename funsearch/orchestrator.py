@@ -873,13 +873,13 @@ def main():
     p1.add_argument("--ucb-c", type=float, default=1.0)
     p1.add_argument("--obs-version", type=str, default="v8",
                         choices=["legacy", "v3", "v4", "v5", "v6", "v7", "v8",
-                                 "v8expert", "v8expertfixed", "v9", "v9expert"],
+                                 "v8exp", "v8expfixed", "v9", "v9exp"],
                         help="Observation pkl version: "
                              "v8=scalar noise, "
-                             "v8expert=v8+expert bg_rms, "
-                             "v8expertfixed=v8expert*EXPTIME Poisson, "
+                             "v8exp=v8+exp bg_rms, "
+                             "v8expfixed=v8exp*EXPTIME Poisson, "
                              "v9=SDSS map noise, "
-                             "v9expert=v9+expert bg_rms")
+                             "v9exp=v9+exp bg_rms")
     p1.add_argument("--bg-noise", type=str, default="v3")
     p1.add_argument("--mask-stars", action="store_true", default=True)
     p1.add_argument("--no-mask-stars", dest="mask_stars", action="store_false")

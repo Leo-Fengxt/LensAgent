@@ -44,10 +44,10 @@ _OBS_DIRS = {
     "v6": os.path.join(LENSING_DIR, "observations_v6"),
     "v7": os.path.join(LENSING_DIR, "observations_v7"),
     "v8": os.path.join(LENSING_DIR, "observations_v8"),
-    "v8expert": os.path.join(LENSING_DIR, "observations_v8expert"),
-    "v8expertfixed": os.path.join(LENSING_DIR, "observations_v8expertfixed"),
+    "v8exp": os.path.join(LENSING_DIR, "observations_v8exp"),
+    "v8expfixed": os.path.join(LENSING_DIR, "observations_v8expfixed"),
     "v9": os.path.join(LENSING_DIR, "observations_v9"),
-    "v9expert": os.path.join(LENSING_DIR, "observations_v9expert"),
+    "v9exp": os.path.join(LENSING_DIR, "observations_v9exp"),
 }
 
 DESC_MODEL = "vertex/google/gemini-3.1-flash-lite-preview"
@@ -117,13 +117,13 @@ def main() -> None:
 
     parser.add_argument("--obs-version", type=str, default="v8",
                         choices=["legacy", "v3", "v4", "v5", "v6", "v7", "v8",
-                                 "v8expert", "v8expertfixed", "v9", "v9expert"],
+                                 "v8exp", "v8expfixed", "v9", "v9exp"],
                         help="Observation pkl version: "
                              "v8=gain/calibvec scalar Poisson, "
-                             "v8expert=v8 Poisson + expert scalar bg_rms, "
-                             "v8expertfixed=v8expert * EXPTIME Poisson, "
+                             "v8exp=v8 Poisson + exp scalar bg_rms, "
+                             "v8expfixed=v8exp * EXPTIME Poisson, "
                              "v9=SDSS map-based noise, "
-                             "v9expert=v9 exposure + expert scalar bg_rms")
+                             "v9exp=v9 exposure + exp scalar bg_rms")
 
     parser.add_argument("--api-key", type=str,
                         default=os.environ.get("OPENROUTER_API_KEY", ""),
@@ -248,7 +248,7 @@ def main() -> None:
     model_group.add_argument("--model-v2", action="store_true",
                              help="Include v2 model combos (PEMD, IEMD, double Sersic "
                                   "lens light, GAUSSIAN_KAPPA) in the scout. "
-                                  "Combos 14-19 from expert's try_all_models notebook.")
+                                  "Combos 14-19 from exp's try_all_models notebook.")
     model_group.add_argument("--model-scout", action="store_true",
                              help="Run PSO scout on all mass families, pick "
                                   "top N, then launch parallel FunSearch "
@@ -257,10 +257,10 @@ def main() -> None:
                              help="Number of top families to evolve in parallel "
                                   "(only with --model-scout)")
     model_group.add_argument("--bg-noise", type=str, default="v3",
-                             choices=["fixed", "2d", "auto", "expert", "v3"],
+                             choices=["fixed", "2d", "auto", "exp", "v3"],
                              help="Background noise model: "
                                   "'v3'=use pkl value as-is (Cutout3_0 pre-subtraction mad_std, default), "
-                                  "'expert'=mad_std on post-subtraction image, "
+                                  "'exp'=mad_std on post-subtraction image, "
                                   "'auto'=sigma-clipped std, "
                                   "'2d'=spatially-varying Background2D, "
                                   "'fixed'=keep pkl original")
@@ -329,7 +329,7 @@ def main() -> None:
         task_label = f"task_{args.task_id:03d}"
         log.info("Task %d: loaded %s (version=%s)", args.task_id, obs_path, obs_version)
 
-    _trust_pkl_versions = ("v8expert", "v8expertfixed", "v9", "v9expert")
+    _trust_pkl_versions = ("v8exp", "v8expfixed", "v9", "v9exp")
     _trust_pkl = obs_version in _trust_pkl_versions
 
     if not _trust_pkl:
@@ -339,9 +339,9 @@ def main() -> None:
         elif args.bg_noise == "auto":
             from observation import apply_auto_background_rms
             apply_auto_background_rms(obs)
-        elif args.bg_noise == "expert":
-            from observation import apply_expert_background_rms
-            apply_expert_background_rms(obs)
+        elif args.bg_noise == "exp":
+            from observation import apply_exp_background_rms
+            apply_exp_background_rms(obs)
         elif args.bg_noise == "v3":
             from observation import apply_v3_background_rms
             apply_v3_background_rms(obs)

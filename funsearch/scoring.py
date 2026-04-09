@@ -15,11 +15,11 @@ import numpy as np
 log = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Expert-aligned parameter configurations.
+# Exp-aligned parameter configurations.
 # Shared EPL/SIE/light priors below are taken from `try_all_models (4).ipynb`.
 # ---------------------------------------------------------------------------
 
-# --- EPL + SHEAR + MULTIPOLE (expert's Cell 3, new model) ---
+# --- EPL + SHEAR + MULTIPOLE (exp's Cell 3, new model) ---
 _EPL_BOUNDS: Dict[str, Tuple[float, float]] = {
     "theta_E": (0.01, 5.0), "gamma": (1.5, 2.8),
     "e1": (-0.5, 0.5), "e2": (-0.5, 0.5),
@@ -66,7 +66,7 @@ _LENS_FIXED: List[Dict[str, Any]] = [
     {}, dict(_SHEAR_FIXED), dict(_MULTIPOLE_FIXED),
 ]
 
-# --- Source light (expert's exact values) ---
+# --- Source light (exp's exact values) ---
 _SRC_BOUNDS: Dict[str, Tuple[float, float]] = {
     "n_sersic": (0.5, 8.0), "R_sersic": (0.01, 10.0),
     "e1": (-0.5, 0.5), "e2": (-0.5, 0.5),
@@ -143,7 +143,7 @@ _POLAR_BOUNDS: Dict[str, Tuple[float, float]] = {
 _POLAR_CENTER: Dict[str, float] = {"beta": 0.5, "center_x": 0.0, "center_y": 0.0}
 _POLAR_CENTER_LL: Dict[str, float] = {"beta": 1.0, "center_x": 0.0, "center_y": 0.0}
 
-# --- Shapelet source component (added to ALL combos per expert notebook) ---
+# --- Shapelet source component (added to ALL combos per exp notebook) ---
 _SHAPELET_SRC_BOUNDS: Dict[str, Tuple[float, float]] = {
     "beta": (0.02, 0.5),
     "center_x": (-10.0, 10.0),
@@ -327,7 +327,7 @@ def build_combo5(n_gaussians: int = 3) -> Dict[str, Any]:
 
 
 def build_combo8(n_gauss: int = DEFAULT_MGE_COMPONENTS) -> Dict[str, Any]:
-    """Build combo 8: expert-style MGE mass/light with N Gaussian components."""
+    """Build combo 8: exp-style MGE mass/light with N Gaussian components."""
 
     def _build_indexed_mge_priors() -> Tuple[Dict[str, Any], Dict[str, Any]]:
         sigma_grid = np.logspace(np.log10(0.05), np.log10(20.0), n_gauss)
@@ -397,8 +397,8 @@ _EPL_CENTER = _LENS_CENTERS[0]
 
 _SIMPLE_LL = _SIMPLE_LL_NO_AMP
 
-# Expert-aligned base kwargs_params matching the shared priors above.
-EXPERT_KWARGS_PARAMS_BASE: Dict[str, Any] = {
+# Exp-aligned base kwargs_params matching the shared priors above.
+EXP_KWARGS_PARAMS_BASE: Dict[str, Any] = {
     "lens_model": [
         [{"theta_E": 1.0, "gamma": 2.0, "e1": 0.0, "e2": 0.0, "center_x": 0.0, "center_y": 0.0},
          {"gamma1": 0.0, "gamma2": 0.0},
@@ -786,7 +786,7 @@ build_combo8(DEFAULT_MGE_COMPONENTS)
 def _inject_shapelet_src() -> None:
     """Ensure every combo has SHAPELETS in source_light_model_list.
 
-    The expert notebook uses [SERSIC_ELLIPSE, SHAPELETS] for source light.
+    The exp notebook uses [SERSIC_ELLIPSE, SHAPELETS] for source light.
     This adds one SHAPELETS component tied to the first source SERSIC_ELLIPSE.
     Stores ``combo["shapelet_src_ties"]`` mapping the shapelet index to its
     parent source-light index.

@@ -228,7 +228,7 @@ def apply_auto_background_rms(obs):
           f"exposure_time={_fmt_noise(exp_time)} for Poisson term)")
 
 
-def apply_expert_background_rms(obs):
+def apply_exp_background_rms(obs):
     """Compute background_rms using mad_std on the current (post-subtraction) image.
 
     Detects sources, deblends, identifies sky pixels, computes mad_std.
@@ -267,7 +267,7 @@ def apply_v3_background_rms(obs):
 
     Cutout3_0 measures mad_std on the RAW image BEFORE Background2D subtraction,
     then saves that value as background_rms alongside the subtracted image.
-    This is the expert's intended noise model — just trust the pkl value.
+    This is the exp's intended noise model — just trust the pkl value.
     """
     kd = obs.kwargs_data_joint['multi_band_list'][0][0]
     bg_rms = kd['background_rms']
@@ -279,7 +279,7 @@ def apply_v3_background_rms(obs):
 def build_likelihood_mask(obs):
     """Build a star-exclusion likelihood mask using deblended source detection.
 
-    Follows the expert's Cutout2_0.ipynb approach: detect all sources,
+    Follows the exp's Cutout2_0.ipynb approach: detect all sources,
     deblend them, keep only the central lens, mask everything else.
     Patches the observation in-place (stored as 3rd element of multi_band_list).
     """

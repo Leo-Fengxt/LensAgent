@@ -88,11 +88,11 @@ def main() -> None:
 
     parser.add_argument("--obs-version", type=str, default="v8",
                         choices=["legacy", "v3", "v4", "v5", "v6", "v7", "v8",
-                                 "v8expert", "v8expertfixed", "v9", "v9expert"],
+                                 "v8exp", "v8expfixed", "v9", "v9exp"],
                         help="Observation pkl version directory "
-                             "(v8=scalar, v8expert=v8+expert bg, "
-                             "v8expertfixed=v8expert*EXPTIME, "
-                             "v9=SDSS maps, v9expert=v9+expert bg)")
+                             "(v8=scalar, v8exp=v8+exp bg, "
+                             "v8expfixed=v8exp*EXPTIME, "
+                             "v9=SDSS maps, v9exp=v9+exp bg)")
     parser.add_argument("--pass1-results", type=str, required=True,
                         help="Path to pass1/pass15/best_params.json "
                              "(pass1.5 best chi2). Deprecated phys/best-valid "
@@ -141,7 +141,7 @@ def main() -> None:
                              "(capped by detected candidates, default: 10)")
     detect.add_argument("--threshold", type=float, default=5.0,
                         help="Pull map threshold in sigma for blob detection "
-                             "(expert default: 5.0)")
+                             "(exp default: 5.0)")
     detect.add_argument("--max-subhalo-mass-msun", type=float, default=1.0e10,
                         help="Hard derived M200 cap for each pass-2 NFW subhalo "
                              "(default: 1e10 Msun)")
@@ -149,7 +149,7 @@ def main() -> None:
     out = parser.add_argument_group("Output")
     out.add_argument("--log-dir", type=str, default="./pass2_results")
     out.add_argument("--bg-noise", type=str, default="v3",
-                     choices=["fixed", "2d", "auto", "expert", "v3"])
+                     choices=["fixed", "2d", "auto", "exp", "v3"])
     out.add_argument("--mask-stars", action="store_true", default=True,
                      help="Build likelihood mask (default: on)")
     out.add_argument("--no-mask-stars", dest="mask_stars", action="store_false",
@@ -175,7 +175,7 @@ def main() -> None:
                           "instead of lenstronomy's per-pixel normalized residuals")
     out.add_argument("--raw-bic", action="store_true",
                      help="Use monotonic raw image-logL delta-BIC "
-                          "instead of the default expert-style "
+                          "instead of the default exp-style "
                           "target-chi2=1 image-logL formula.")
     out.add_argument("--pass2-pso", action="store_true",
                      help="Run PSO seeding in pass2 to re-optimize all params "
@@ -219,7 +219,7 @@ def main() -> None:
         obs_path = resolve_obs_path(args.task_id, version=obs_version)
         obs = ObservationBundle.load(obs_path)
 
-    _trust_pkl_versions = ("v8expert", "v8expertfixed", "v9", "v9expert")
+    _trust_pkl_versions = ("v8exp", "v8expfixed", "v9", "v9exp")
     _trust_pkl = obs_version in _trust_pkl_versions
 
     if not _trust_pkl:
@@ -229,9 +229,9 @@ def main() -> None:
         elif args.bg_noise == "auto":
             from observation import apply_auto_background_rms
             apply_auto_background_rms(obs)
-        elif args.bg_noise == "expert":
-            from observation import apply_expert_background_rms
-            apply_expert_background_rms(obs)
+        elif args.bg_noise == "exp":
+            from observation import apply_exp_background_rms
+            apply_exp_background_rms(obs)
         elif args.bg_noise == "v3":
             from observation import apply_v3_background_rms
             apply_v3_background_rms(obs)

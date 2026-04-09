@@ -1,6 +1,6 @@
 """Subhalo detection and fitting for pass-2 analysis.
 
-Implements the expert's Subhalo_detection.ipynb pipeline:
+Implements the exp's Subhalo_detection.ipynb pipeline:
 1. Compute pull map from pass-1 residuals
 2. Detect candidate locations via blob_log
 3. Evaluate NFW subhalo models appended to pass-1 params
@@ -79,7 +79,7 @@ def compute_pull_map(
 def detect_candidates(
     pull_map: np.ndarray,
     obs,
-    threshold: float = 5.0,  # expert default
+    threshold: float = 5.0,  # exp default
 ) -> List[Dict[str, Any]]:
     """Detect subhalo candidates via Laplacian-of-Gaussian blob detection.
 
@@ -137,7 +137,7 @@ def build_subhalo_model(
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """Build kwargs_model and kwargs_params for subhalo fitting.
 
-    Matches expert's Subhalo_detection notebook: copies existing
+    Matches exp's Subhalo_detection notebook: copies existing
     kwargs_params (base stays FREE) and appends NFW params.
 
     Returns (kwargs_model, kwargs_params).
@@ -147,7 +147,7 @@ def build_subhalo_model(
         km['lens_model_list'].append('NFW')
 
     from . import scoring as _S
-    base = copy.deepcopy(_S.EXPERT_KWARGS_PARAMS_BASE)
+    base = copy.deepcopy(_S.EXP_KWARGS_PARAMS_BASE)
 
     init_lens, sigma_lens, fixed_lens, lower_lens, upper_lens = base["lens_model"]
 
@@ -205,7 +205,7 @@ def image_log_likelihood_for_bic(
 
     Default behavior mirrors reduced chi2 values below 1.0 around the optimum
     at 1.0 before converting to image log-likelihood. This preserves the
-    expert's ``2 * (logL_new - logL_old) - Delta(k) * log(n)`` structure while
+    exp's ``2 * (logL_new - logL_old) - Delta(k) * log(n)`` structure while
     making "closer to chi2=1" the preferred direction on both sides of 1.
     """
     n = max(int(n_pixels or 0), 1)
@@ -523,14 +523,14 @@ def register_subhalo_combo(
 ) -> Dict[str, Any]:
     """Register the subhalo-extended model as a scoring combo.
 
-    By default the base pass-1 params remain FREE (matching the expert's
+    By default the base pass-1 params remain FREE (matching the exp's
     approach of copying kwargs_params and appending NFW). Only the NFW params
     are new.
 
     When *freeze_base_for_pso=True* (default, backward compatible), PSO
     seeds fix the base lens params and only explore NFW.
     When *freeze_base_for_pso=False*, PSO seeds use pass-1 values as
-    init with full bounds, matching the expert's joint optimization.
+    init with full bounds, matching the exp's joint optimization.
 
     When *freeze_base_model=True*, all original non-subhalo lens, lens-light,
     and source parameters are fixed to the pass-1/pass1.5 best proposal so the

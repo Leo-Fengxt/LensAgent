@@ -415,7 +415,7 @@ class InnerAgent:
         return result, err
 
     _DESC_SYSTEM = (
-        "You are an expert at analyzing gravitational lens images. You will "
+        "You are an exp-level analyst of gravitational lens images. You will "
         "receive a multi-panel comparison image. The panels are:\n"
         "1) GT (Observed) — the raw data (foreground galaxy + lensed arcs)\n"
         "2) GT-Lens — observed data minus model lens light, revealing actual lensed arcs/rings\n"

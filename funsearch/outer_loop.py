@@ -1303,7 +1303,7 @@ def _build_scout_kwargs_params(km, combo):
     """Build kwargs_params for FittingSequence from model param_names.
 
     Uses lenstronomy's own function signature defaults for init values.
-    Reuses the expert's exact lens_light and source params.
+    Reuses the exp's exact lens_light and source params.
     """
     import inspect as _inspect
     from lenstronomy.LensModel.lens_model import LensModel
@@ -1560,7 +1560,7 @@ def _build_scout_kwargs_params(km, combo):
         freeze_combo = bool(combo.get("freeze_base_model"))
         model_list = km.get(model_key, [])
         if not combo_bounds:
-            base = _S.EXPERT_KWARGS_PARAMS_BASE
+            base = _S.EXP_KWARGS_PARAMS_BASE
             return base.get(f"{key[0:3]}_model" if key == "src" else f"lens_light_model",
                            base.get("source_model", [[], [], [], [], []]))
         i_list, s_list, f_list, lo_list, hi_list = [], [], [], [], []
