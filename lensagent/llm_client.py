@@ -18,7 +18,11 @@ class OpenRouterClient:
     configured via the ``reasoning`` extra-body field (effort: high,
     exclude: true by default -- no ``<think>`` tokens in the response).
 
-    Supports both OpenRouter and Requesty backends via BASE_URL.
+    Compatible with any OpenAI-style chat-completions endpoint that
+    normalizes the request schema (Requesty, OpenRouter, OpenAI native,
+    Anthropic OpenAI-compat, vLLM, Ollama, LM Studio, ...).  Pass
+    ``base_url`` to point at a different gateway; the default is the
+    Requesty router used by the original LensAgent runs.
     """
 
     BASE_URL = "https://router.requesty.ai/v1/chat/completions"
@@ -34,7 +38,8 @@ class OpenRouterClient:
         timeout_s: int = 600,
         reasoning_effort: str = "high",
         reasoning_exclude: bool = True,
-        app_title: str = "lensing-funsearch",
+        app_title: str = "lensing-lensagent",
+        base_url: Optional[str] = None,
     ):
         if not api_key:
             raise ValueError("api_key is required")
@@ -47,6 +52,7 @@ class OpenRouterClient:
         self.reasoning_effort = reasoning_effort
         self.reasoning_exclude = reasoning_exclude
         self.app_title = app_title
+        self.base_url = base_url or self.BASE_URL
 
         self.total_prompt_tokens = 0
         self.total_completion_tokens = 0
@@ -69,7 +75,7 @@ class OpenRouterClient:
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
             "X-Title": self.app_title,
-            "HTTP-Referer": "https://lensing-funsearch.app",
+            "HTTP-Referer": "https://lensing-lensagent.app",
         }
         return headers
 
@@ -146,7 +152,7 @@ class OpenRouterClient:
             t0 = time.time()
             try:
                 resp = requests.post(
-                    self.BASE_URL,
+                    self.base_url,
                     headers=headers,
                     json=payload,
                     timeout=self.timeout_s,

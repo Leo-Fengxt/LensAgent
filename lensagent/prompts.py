@@ -118,12 +118,12 @@ def _active_scoring_weights() -> Dict[str, float]:
     """Return the currently active scoring weights used by this run."""
     from . import scoring as _S
 
-    if _S.QUALITY_FN is _S.compute_quality_pass15:
+    if _S.QUALITY_FN is _S.compute_quality_prl:
         return {
-            "alpha": _S.ALPHA_P15,
-            "beta": _S.BETA_P15,
-            "gamma": _S.GAMMA_P15,
-            "delta": _S.DELTA_P15,
+            "alpha": _S.ALPHA_PRL,
+            "beta": _S.BETA_PRL,
+            "gamma": _S.GAMMA_PRL,
+            "delta": _S.DELTA_PRL,
             "epsilon": _S.EPSILON,
         }
     return {
@@ -417,11 +417,11 @@ def build_subhalo_system_prompt(
     max_subhalo_mass_msun: float = 1.0e10,
     freeze_non_subhalo_params: bool = False,
 ) -> str:
-    """System prompt for the pass-2 subhalo detection agent.
+    """System prompt for the RSI subhalo detection agent.
 
-    Same detailed component listing as pass1's build_system_prompt, with NFW
-    subhalo components clearly marked as the primary target. Optionally marks
-    all non-subhalo components as frozen to the pass1.5 reference solution.
+    Same detailed component listing as the AFMS build_system_prompt, with
+    NFW subhalo components clearly marked as the primary target. Optionally
+    marks all non-subhalo components as frozen to the PRL reference solution.
     """
     from .scoring import (PRIOR_BOUNDS, FIXED_PARAMS, ACTIVE_COMBO,
                           MODEL_COMBOS, BLIND_MODE, KIN_SOFT, CHI2_PENALTY,
@@ -469,7 +469,7 @@ def build_subhalo_system_prompt(
             if is_sub:
                 tag = " **[NFW SUBHALO — PRIMARY TARGET]**"
             elif freeze_non_subhalo_params:
-                tag = " **[FROZEN TO PASS1.5]**"
+                tag = " **[FROZEN TO PRL]**"
             # Do not surface fixed shapelet config such as n_max in the prompt.
             fixed_note = ""
             if fixed_str and "SHAPELETS" not in model_name:
@@ -505,7 +505,7 @@ dark matter substructure in the residuals. {fit_sentence}
 ## Model Components
 
 The model has {idx-1} components. {
-    "Only the NFW subhalo component(s) are free; all other components are frozen to the pass1.5 reference values. Still return the full JSON structure for every component."
+    "Only the NFW subhalo component(s) are free; all other components are frozen to the PRL reference values. Still return the full JSON structure for every component."
     if freeze_non_subhalo_params else
     "You set ALL parameters for EVERY component:"
 }
@@ -545,7 +545,7 @@ Higher Q is better.
 
 Delta-BIC is reported for subhalo significance (delta-BIC > 10 = significant detection).
 
-- Hard pass-2 constraint: each NFW subhalo must have derived M200 <= {max_subhalo_mass_msun:.2e} Msun. Any proposal above this cap is invalid, heavily penalized, and excluded from final ranking.
+- Hard RSI constraint: each NFW subhalo must have derived M200 <= {max_subhalo_mass_msun:.2e} Msun. Any proposal above this cap is invalid, heavily penalized, and excluded from final ranking.
 
 ## Images
 
@@ -583,7 +583,7 @@ Same format as evaluate. The best of the 3 is submitted.
 ## Instructions
 
 - {
-    "Non-subhalo components are frozen to the pass1.5 reference values. Do not try to re-optimize them; any changes will be ignored/overwritten."
+    "Non-subhalo components are frozen to the PRL reference values. Do not try to re-optimize them; any changes will be ignored/overwritten."
     if freeze_non_subhalo_params else
     "Propose ALL parameters for ALL components in every call."
 }

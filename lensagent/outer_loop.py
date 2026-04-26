@@ -1,4 +1,4 @@
-"""FunSearch-style evolutionary outer loop with islands.
+"""LensAgent-style evolutionary outer loop with islands.
 
 Each island is an independent population of proposals.  Context sampling
 happens within a single island, so different islands evolve toward
@@ -47,7 +47,7 @@ log = logging.getLogger(__name__)
 DEFAULT_N_ISLANDS = 5
 
 
-class FunSearchLoop:
+class LensAgentLoop:
     """Evolutionary loop with island-based population management."""
 
     def __init__(
@@ -104,8 +104,8 @@ class FunSearchLoop:
         self.rng = np.random.default_rng()
 
         ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-        self.log_path = Path(log_dir) / f"funsearch_log_{ts}.jsonl"
-        log.info("FunSearch log: %s", self.log_path)
+        self.log_path = Path(log_dir) / f"lensagent_log_{ts}.jsonl"
+        log.info("LensAgent log: %s", self.log_path)
 
     def _postprocess_eval_results(
         self,
@@ -717,7 +717,7 @@ class FunSearchLoop:
 
         pw = self.parallel_workers
         combo_label = S.MODEL_COMBOS.get(S.ACTIVE_COMBO, {}).get("label", "?")
-        log.info("Starting FunSearch  model=%s (combo %d)  iterations=%d  islands=%d  "
+        log.info("Starting LensAgent  model=%s (combo %d)  iterations=%d  islands=%d  "
                  "inner_steps=%d  llm_budget=%s  concurrency=%d",
                  combo_label, S.ACTIVE_COMBO,
                  n_iterations, self.n_islands, self.inner_max_steps,
@@ -826,7 +826,7 @@ class FunSearchLoop:
                 _force_shutdown_pool(pool)
 
         log.info("=" * 60)
-        log.info("FunSearch complete.")
+        log.info("LensAgent complete.")
         log.info("  %s", self.db.stats_summary())
         log.info("  %s", self.llm.budget_summary())
         self._log_islands("final")
@@ -2214,7 +2214,7 @@ class BanditScheduler:
                     continue
                 try:
                     S.set_model_combo(cs.combo_id)
-                    dummy_loop = FunSearchLoop.__new__(FunSearchLoop)
+                    dummy_loop = LensAgentLoop.__new__(LensAgentLoop)
                     dummy_loop.obs = cs.obs
                     dummy_loop.db = cs.db
                     dummy_loop.eval_timeout_s = self.eval_timeout_s

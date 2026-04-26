@@ -56,7 +56,7 @@ _ARRAY_LABELS = {
     },
     "pull_map": {
         "kind": "diagnostic",
-        "description": "Pass-2 pull/significance map used for candidate detection.",
+        "description": "RSI pull/significance map used for candidate detection.",
         "units": "sigma",
     },
 }
@@ -151,10 +151,10 @@ def _scoring_context() -> dict:
             "beta": S.BETA,
             "gamma": S.GAMMA,
             "delta": S.DELTA,
-            "alpha_p15": S.ALPHA_P15,
-            "beta_p15": S.BETA_P15,
-            "gamma_p15": S.GAMMA_P15,
-            "delta_p15": S.DELTA_P15,
+            "alpha_prl": S.ALPHA_PRL,
+            "beta_prl": S.BETA_PRL,
+            "gamma_prl": S.GAMMA_PRL,
+            "delta_prl": S.DELTA_PRL,
             "chi2_fine_band": S.CHI2_FINE_BAND,
             "chi2_fine_boost": S.CHI2_FINE_BOOST,
             "chi2_ultra_fine_band": S.CHI2_ULTRA_FINE_BAND,

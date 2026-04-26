@@ -6,9 +6,9 @@ Google Drive hierarchy:
     lensing-final/
         <campaign>/
             task_000/
-                pass1/   (summary, best_params, best_fit, best_single)
-                pass15/  (best_params, best_fit, best_single)
-                pass2/   (summary, best_params, pull map, best_single)
+                afms/    (summary, best_params, best_fit, best_single)
+                prl/     (best_params, best_fit, best_single)
+                rsi/     (summary, best_params, pull map, best_single)
             task_018/
                 ...
 
@@ -24,7 +24,7 @@ from pathlib import Path
 from threading import Lock
 from typing import Optional
 
-log = logging.getLogger("funsearch.drive")
+log = logging.getLogger("lensagent.drive")
 
 LENSING_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TOKEN_PATH = os.path.join(LENSING_DIR, "token.json")
@@ -34,7 +34,7 @@ ROOT_FOLDER_NAME = "lensing-final"
 MAX_RETRIES = 3
 RETRY_BACKOFF = 5
 
-_PASS1_UPLOAD_GLOBS = [
+_AFMS_UPLOAD_GLOBS = [
     "results_bundle/summary.txt",
     "results_bundle/best/best_params.json",
     "results_bundle/best/best_fit.png",
@@ -45,18 +45,18 @@ _PASS1_UPLOAD_GLOBS = [
     "results_bundle/best/observation_bundle.pkl",
 ]
 
-_PASS15_UPLOAD_GLOBS = [
-    "pass15/best_params.json",
-    "pass15/best_fit.png",
-    "pass15/best_iter_0999.png",
-    "pass15/best_single.png",
-    "pass15/repro_manifest.json",
-    "pass15/repro_arrays.npz",
-    "pass15/repro_arrays_map.json",
-    "pass15/observation_bundle.pkl",
+_PRL_UPLOAD_GLOBS = [
+    "prl/best_params.json",
+    "prl/best_fit.png",
+    "prl/best_iter_0999.png",
+    "prl/best_single.png",
+    "prl/repro_manifest.json",
+    "prl/repro_arrays.npz",
+    "prl/repro_arrays_map.json",
+    "prl/observation_bundle.pkl",
 ]
 
-_PASS2_UPLOAD_GLOBS = [
+_RSI_UPLOAD_GLOBS = [
     "summary.txt",
     "best_params_chi2.json",
     "best_params_phys.json",
@@ -64,7 +64,7 @@ _PASS2_UPLOAD_GLOBS = [
     "pull_map_candidates.png",
     "best_iter_0999.png",
     "best_single.png",
-    "pass2_results.zip",
+    "rsi_results.zip",
     "repro_manifest.json",
     "repro_arrays.npz",
     "repro_arrays_map.json",
@@ -199,82 +199,82 @@ class DriveUploader:
                         return False
         return False
 
-    def upload_pass1(self, task_id: int, pass1_dir: str,
-                     campaign_name: str) -> None:
-        """Upload pass1 key outputs after pass1 completes."""
+    def upload_afms(self, task_id: int, afms_dir: str,
+                    campaign_name: str) -> None:
+        """Upload AFMS key outputs after AFMS completes."""
         if not self._enabled:
             return
         with self._lock:
             try:
                 folder = self._ensure_path(
                     ROOT_FOLDER_NAME, campaign_name,
-                    f"task_{task_id:03d}", "pass1")
+                    f"task_{task_id:03d}", "afms")
                 if folder is None:
                     return
 
                 count = 0
-                for rel in _PASS1_UPLOAD_GLOBS:
-                    full = os.path.join(pass1_dir, rel)
+                for rel in _AFMS_UPLOAD_GLOBS:
+                    full = os.path.join(afms_dir, rel)
                     if os.path.exists(full):
                         if self._upload_file(full, folder):
                             count += 1
 
-                log.info("task %03d: uploaded %d pass1 files to Drive",
+                log.info("task %03d: uploaded %d AFMS files to Drive",
                          task_id, count)
             except Exception as exc:
-                log.error("task %03d: Drive pass1 upload error: %s",
+                log.error("task %03d: Drive AFMS upload error: %s",
                           task_id, exc)
 
-    def upload_pass15(self, task_id: int, pass1_dir: str,
-                      campaign_name: str) -> None:
-        """Upload pass1.5 key outputs after pass1 completes."""
+    def upload_prl(self, task_id: int, afms_dir: str,
+                   campaign_name: str) -> None:
+        """Upload PRL key outputs after AFMS completes."""
         if not self._enabled:
             return
         with self._lock:
             try:
                 folder = self._ensure_path(
                     ROOT_FOLDER_NAME, campaign_name,
-                    f"task_{task_id:03d}", "pass15")
+                    f"task_{task_id:03d}", "prl")
                 if folder is None:
                     return
 
                 count = 0
-                for rel in _PASS15_UPLOAD_GLOBS:
-                    full = os.path.join(pass1_dir, rel)
+                for rel in _PRL_UPLOAD_GLOBS:
+                    full = os.path.join(afms_dir, rel)
                     if os.path.exists(full):
                         if self._upload_file(full, folder):
                             count += 1
 
-                log.info("task %03d: uploaded %d pass1.5 files to Drive",
+                log.info("task %03d: uploaded %d PRL files to Drive",
                          task_id, count)
             except Exception as exc:
-                log.error("task %03d: Drive pass1.5 upload error: %s",
+                log.error("task %03d: Drive PRL upload error: %s",
                           task_id, exc)
 
-    def upload_pass2(self, task_id: int, pass2_dir: str,
-                     campaign_name: str) -> None:
-        """Upload pass2 key outputs after pass2 completes."""
+    def upload_rsi(self, task_id: int, rsi_dir: str,
+                   campaign_name: str) -> None:
+        """Upload RSI key outputs after RSI completes."""
         if not self._enabled:
             return
         with self._lock:
             try:
                 folder = self._ensure_path(
                     ROOT_FOLDER_NAME, campaign_name,
-                    f"task_{task_id:03d}", "pass2")
+                    f"task_{task_id:03d}", "rsi")
                 if folder is None:
                     return
 
                 count = 0
-                for rel in _PASS2_UPLOAD_GLOBS:
-                    full = os.path.join(pass2_dir, rel)
+                for rel in _RSI_UPLOAD_GLOBS:
+                    full = os.path.join(rsi_dir, rel)
                     if os.path.exists(full):
                         if self._upload_file(full, folder):
                             count += 1
 
-                log.info("task %03d: uploaded %d pass2 files to Drive",
+                log.info("task %03d: uploaded %d RSI files to Drive",
                          task_id, count)
             except Exception as exc:
-                log.error("task %03d: Drive pass2 upload error: %s",
+                log.error("task %03d: Drive RSI upload error: %s",
                           task_id, exc)
 
     def upload_campaign_summary(self, campaign_dir: str,

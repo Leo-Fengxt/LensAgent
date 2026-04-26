@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
 """
-Batch orchestrator for the full lensing pipeline (pass1 + pass1.5 + pass2).
+Batch orchestrator for the full LensAgent pipeline (AFMS + PRL + RSI).
 
-Runs a configurable list of task IDs through all passes with async-style
+Runs a configurable list of task IDs through all phases with async-style
 concurrency: at all times up to --concurrency tasks are in flight, and
 as each finishes the next is dispatched immediately.
 
 Usage:
-    python -m funsearch.orchestrator \\
+    python -m lensagent.orchestrator \\
         --tasks "0,18,50,86,100" \\
         --concurrency 3 \\
         --api-key "$OPENROUTER_API_KEY"
 
     # Or a range:
-    python -m funsearch.orchestrator \\
+    python -m lensagent.orchestrator \\
         --task-range 0 20 \\
         --concurrency 4
 
-    # Auto mode: sorted by lowest sigma_err (best constrained first):
-    python -m funsearch.orchestrator \\
-        --auto --max-tasks 30 --skip-tasks "5,12" \\
+    # Shuffle mode: random order over the full catalog:
+    python -m lensagent.orchestrator \\
+        --shuffle --max-tasks 30 --skip-tasks "5,12" \\
         --concurrency 4 \\
         --api-key "$OPENROUTER_API_KEY"
 
@@ -29,9 +29,10 @@ All outputs are stored under a single campaign directory:
         orchestrator.log    <- full orchestrator log (tee'd to stdout)
         campaign.json       <- master config + progress + results
         task_000/
-            pass1/          <- pass1 + pass1.5 logs and outputs
+            afms/           <- AFMS logs and outputs
                 stdout.log  <- captured subprocess output
-            pass2/          <- pass2 logs and outputs
+                prl/        <- PRL logs and outputs (nested in AFMS subprocess)
+            rsi/            <- RSI logs and outputs
                 stdout.log
             status.json     <- per-task status tracker
             task.log        <- per-task orchestrator log
@@ -112,10 +113,10 @@ def _setup_task_logger(task_dir: str, task_id: int) -> logging.Logger:
     return tl
 
 
-def _build_pass1_cmd(task_id: int, log_dir: str, cfg: dict) -> list:
-    """Construct the pass1 + pass1.5 CLI command."""
+def _build_afms_cmd(task_id: int, log_dir: str, cfg: dict) -> list:
+    """Construct the AFMS + PRL CLI command."""
     cmd = [
-        sys.executable, "-m", "funsearch.runner",
+        sys.executable, "-m", "lensagent.runner",
         "--task-id", str(task_id),
         "--api-key", cfg["api_key"],
         "--model", cfg["model"],
@@ -123,13 +124,12 @@ def _build_pass1_cmd(task_id: int, log_dir: str, cfg: dict) -> list:
         "--top-p", str(cfg["top_p"]),
         "--max-tokens", str(cfg["max_tokens"]),
         "--reasoning-effort", cfg["reasoning_effort"],
-        "--iterations", str(cfg["pass1_iterations"]),
+        "--iterations", str(cfg["afms_iterations"]),
         "--inner-steps", str(cfg["inner_steps"]),
-        "--max-llm-calls", str(cfg["pass1_max_llm_calls"]),
+        "--max-llm-calls", str(cfg["afms_max_llm_calls"]),
         "--seeds", str(cfg["seeds"]),
         "--pso-runs", str(cfg["pso_runs"]),
         "--seed-mode", cfg["seed_mode"],
-        "--bg-noise", cfg["bg_noise"],
         "--scout-top-n", str(cfg["scout_top_n"]),
         "--islands", str(cfg["islands"]),
         "--parallel", str(cfg["parallel_per_task"]),
@@ -143,9 +143,8 @@ def _build_pass1_cmd(task_id: int, log_dir: str, cfg: dict) -> list:
         "--show-budget",
         "--physicality", cfg["physicality"],
         "--ucb-c", str(cfg["ucb_c"]),
-        "--pass15-budget", str(cfg["pass15_budget"]),
+        "--prl-budget", str(cfg["prl_budget"]),
         "--chi2-penalty", cfg["chi2_penalty"],
-        "--obs-version", cfg["obs_version"],
     ]
     if cfg["mask_stars"]:
         cmd.append("--mask-stars")
@@ -159,6 +158,8 @@ def _build_pass1_cmd(task_id: int, log_dir: str, cfg: dict) -> list:
         cmd.append("--model-v2")
     if cfg.get("pso_gpu_url"):
         cmd += ["--pso-gpu-url", cfg["pso_gpu_url"]]
+    if cfg.get("api_base_url"):
+        cmd += ["--api-base-url", cfg["api_base_url"]]
     if cfg.get("disable_image_feedback"):
         cmd.append("--disable-image-feedback")
     if cfg.get("finish_only_tool"):
@@ -166,22 +167,22 @@ def _build_pass1_cmd(task_id: int, log_dir: str, cfg: dict) -> list:
     return cmd
 
 
-def _build_pass2_cmd(task_id: int, pass1_results: str,
-                     log_dir: str, cfg: dict) -> list:
-    """Construct the pass2 CLI command."""
+def _build_rsi_cmd(task_id: int, prl_results: str,
+                   log_dir: str, cfg: dict) -> list:
+    """Construct the RSI CLI command."""
     cmd = [
-        sys.executable, "-m", "funsearch.pass2",
+        sys.executable, "-m", "lensagent.rsi",
         "--task-id", str(task_id),
-        "--pass1-results", pass1_results,
+        "--prl-results", prl_results,
         "--api-key", cfg["api_key"],
         "--model", cfg["model"],
         "--temperature", str(cfg["temperature"]),
         "--top-p", str(cfg["top_p"]),
         "--max-tokens", str(cfg["max_tokens"]),
         "--reasoning-effort", cfg["reasoning_effort"],
-        "--iterations", str(cfg["pass2_iterations"]),
-        "--inner-steps", str(cfg["pass2_inner_steps"]),
-        "--max-llm-calls", str(cfg["pass2_max_llm_calls"]),
+        "--iterations", str(cfg["rsi_iterations"]),
+        "--inner-steps", str(cfg["rsi_inner_steps"]),
+        "--max-llm-calls", str(cfg["rsi_max_llm_calls"]),
         "--seeds", str(cfg["seeds"]),
         "--pso-runs", str(cfg["pso_runs"]),
         "--n-subhalos", str(cfg["n_subhalos"]),
@@ -189,15 +190,13 @@ def _build_pass2_cmd(task_id: int, pass1_results: str,
         "--max-subhalo-mass-msun", str(cfg["max_subhalo_mass_msun"]),
         "--islands", str(cfg["islands"]),
         "--parallel", str(cfg["parallel_per_task"]),
-        "--bg-noise", cfg["bg_noise"],
         "--log-dir", log_dir,
         "--show-budget",
         "--physicality", cfg["physicality"],
         "--chi2-penalty", cfg["chi2_penalty"],
-        "--kin-weight", str(cfg["pass2_kin_weight"]),
+        "--kin-weight", str(cfg["rsi_kin_weight"]),
         "--pso-particles", str(cfg["pso_particles"]),
         "--pso-iterations", str(cfg["pso_iterations"]),
-        "--obs-version", cfg["obs_version"],
         "--early-stop", str(cfg["early_stop"]),
         "--early-stop-delta", str(cfg["early_stop_delta"]),
     ]
@@ -207,8 +206,10 @@ def _build_pass2_cmd(task_id: int, pass1_results: str,
         cmd.append("--no-mask-stars")
     if cfg["subtracted_chi2"]:
         cmd.append("--subtracted-chi2")
-    if cfg["pass2_pso"]:
-        cmd.append("--pass2-pso")
+    if cfg["rsi_pso"]:
+        cmd.append("--rsi-pso")
+    if cfg.get("api_base_url"):
+        cmd += ["--api-base-url", cfg["api_base_url"]]
     if cfg.get("freeze_base_model"):
         cmd.append("--freeze-base-model")
     return cmd
@@ -310,9 +311,9 @@ def _check_disk_space(campaign_dir: str, task_log: logging.Logger = None) -> boo
         }
 
         for pattern in [
-            os.path.join(campaign_dir, "*/pass1/logs-*/best_iter_*.png"),
-            os.path.join(campaign_dir, "*/pass2/best_iter_*.png"),
-            os.path.join(campaign_dir, "*/pass1/pass15/best_iter_*.png"),
+            os.path.join(campaign_dir, "*/afms/logs-*/best_iter_*.png"),
+            os.path.join(campaign_dir, "*/rsi/best_iter_*.png"),
+            os.path.join(campaign_dir, "*/afms/prl/best_iter_*.png"),
         ]:
             for f in _g.glob(pattern):
                 if os.path.basename(f) in keep_names:
@@ -332,8 +333,8 @@ def _check_disk_space(campaign_dir: str, task_log: logging.Logger = None) -> boo
             return True
 
         for pattern in [
-            os.path.join(campaign_dir, "*/pass1/logs-*/pso_cache.json"),
-            os.path.join(campaign_dir, "*/pass2/pso_cache.json"),
+            os.path.join(campaign_dir, "*/afms/logs-*/pso_cache.json"),
+            os.path.join(campaign_dir, "*/rsi/pso_cache.json"),
         ]:
             for f in _g.glob(pattern):
                 try:
@@ -344,10 +345,10 @@ def _check_disk_space(campaign_dir: str, task_log: logging.Logger = None) -> boo
                     pass
 
         for pattern in [
-            os.path.join(campaign_dir, "*/pass1/logs-*/llm_trace.jsonl"),
-            os.path.join(campaign_dir, "*/pass1/logs-*/desc_trace.jsonl"),
-            os.path.join(campaign_dir, "*/pass2/llm_trace.jsonl"),
-            os.path.join(campaign_dir, "*/pass2/desc_trace.jsonl"),
+            os.path.join(campaign_dir, "*/afms/logs-*/llm_trace.jsonl"),
+            os.path.join(campaign_dir, "*/afms/logs-*/desc_trace.jsonl"),
+            os.path.join(campaign_dir, "*/rsi/llm_trace.jsonl"),
+            os.path.join(campaign_dir, "*/rsi/desc_trace.jsonl"),
         ]:
             for f in _g.glob(pattern):
                 try:
@@ -389,7 +390,7 @@ def _run_subprocess(cmd: list, label: str, task_log: logging.Logger,
         pat = re.compile(
             r'(BANDIT Progress.*ETA|>>> Progress.*ETA|'
             r'GLOBAL EARLY STOP|BEST:.*chi2=|'
-            r'Pass 1\.5.*complete|Pass 2 complete)')
+            r'PRL.*complete|RSI complete)')
         try:
             pos = 0
             while not stop_event.is_set():
@@ -489,7 +490,7 @@ def _fmt_duration(seconds: float) -> str:
 
 
 def _run_task(task_id: int, campaign_dir: str, cfg: dict,
-              skip_pass2: bool = False,
+              skip_rsi: bool = False,
               uploader=None, campaign_name: str = "",
               sdss_name: str = "") -> dict:
     """Run the full pipeline for one task. Returns a status dict.
@@ -509,12 +510,12 @@ def _run_task(task_id: int, campaign_dir: str, cfg: dict,
 
     tl.info("=" * 50)
     tl.info("%s pipeline starting", task_label)
-    tl.info("  skip_pass2: %s", skip_pass2)
+    tl.info("  skip_rsi: %s", skip_rsi)
     tl.info("  prior status: %s", json.dumps(prior, indent=2))
     t0 = time.monotonic()
 
     result = {"task_id": task_id, "sdss_name": sdss_name,
-              "pass1": None, "pass2": None}
+              "afms": None, "rsi": None}
 
     if sdss_name:
         sd = _load_status(status_path)
@@ -527,106 +528,106 @@ def _run_task(task_id: int, campaign_dir: str, cfg: dict,
 
     _check_disk_space(campaign_dir, tl)
 
-    # ---- Pass 1 + 1.5 ----
-    pass1_dir = os.path.join(task_dir, "pass1")
+    # ---- AFMS + PRL ----
+    afms_dir = os.path.join(task_dir, "afms")
 
-    if _phase_done(prior, "pass1"):
-        tl.info("pass1 already done (at %s), skipping",
-                prior["pass1"].get("ts", "?"))
-        log.info("task %03d: pass1 already done, skipping", task_id)
-        result["pass1"] = "done"
+    if _phase_done(prior, "afms"):
+        tl.info("AFMS already done (at %s), skipping",
+                prior["afms"].get("ts", "?"))
+        log.info("task %03d: AFMS already done, skipping", task_id)
+        result["afms"] = "done"
     else:
-        _update_status(status_path, "pass1", "running")
-        tl.info("Starting pass1")
+        _update_status(status_path, "afms", "running")
+        tl.info("Starting AFMS")
         rc = _run_subprocess(
-            _build_pass1_cmd(task_id, pass1_dir, cfg),
-            label=f"task {task_id:03d} pass1",
+            _build_afms_cmd(task_id, afms_dir, cfg),
+            label=f"task {task_id:03d} AFMS",
             task_log=tl,
-            log_dir=pass1_dir,
+            log_dir=afms_dir,
             timeout_hours=cfg.get("timeout_hours", 12),
         )
         if rc != 0:
-            _update_status(status_path, "pass1", "failed", {"exit_code": rc})
-            result["pass1"] = "failed"
-            tl.error("pass1 FAILED (exit %d), skipping pass2", rc)
-            log.error("task %03d: pass1 FAILED (exit %d)", task_id, rc)
+            _update_status(status_path, "afms", "failed", {"exit_code": rc})
+            result["afms"] = "failed"
+            tl.error("AFMS FAILED (exit %d), skipping RSI", rc)
+            log.error("task %03d: AFMS FAILED (exit %d)", task_id, rc)
             result["elapsed_s"] = time.monotonic() - t0
             return result
-        _update_status(status_path, "pass1", "done")
-        result["pass1"] = "done"
-        tl.info("pass1 completed successfully")
+        _update_status(status_path, "afms", "done")
+        result["afms"] = "done"
+        tl.info("AFMS completed successfully")
 
         if uploader:
             try:
-                uploader.upload_pass1(task_id, pass1_dir, campaign_name)
-                uploader.upload_pass15(task_id, pass1_dir, campaign_name)
+                uploader.upload_afms(task_id, afms_dir, campaign_name)
+                uploader.upload_prl(task_id, afms_dir, campaign_name)
             except Exception as exc:
-                tl.warning("Drive upload (pass1/1.5) failed: %s", exc)
+                tl.warning("Drive upload (AFMS/PRL) failed: %s", exc)
 
-    if skip_pass2:
-        result["pass2"] = "skipped"
-        tl.info("pass2 skipped (--skip-pass2)")
+    if skip_rsi:
+        result["rsi"] = "skipped"
+        tl.info("RSI skipped (--skip-rsi)")
         result["elapsed_s"] = time.monotonic() - t0
         return result
 
     _check_disk_space(campaign_dir, tl)
 
-    # ---- Locate pass1.5 best params for pass2 (always best chi2, never phys) ----
-    pass15_params = os.path.join(pass1_dir, "pass15", "best_params.json")
-    if not os.path.exists(pass15_params):
-        _update_status(status_path, "pass2", "skipped",
-                       {"reason": "no pass1.5 best_params found"})
-        result["pass2"] = "skipped"
-        tl.warning("No pass1.5 best_params.json found, skipping pass2")
-        tl.debug("Searched: %s", os.path.join(pass1_dir, "pass15", "best_params.json"))
-        log.warning("task %03d: no pass1.5 params found, skipping pass2",
+    # ---- Locate PRL best params for RSI (always best chi2, never phys) ----
+    prl_params = os.path.join(afms_dir, "prl", "best_params.json")
+    if not os.path.exists(prl_params):
+        _update_status(status_path, "rsi", "skipped",
+                       {"reason": "no PRL best_params found"})
+        result["rsi"] = "skipped"
+        tl.warning("No PRL best_params.json found, skipping RSI")
+        tl.debug("Searched: %s", os.path.join(afms_dir, "prl", "best_params.json"))
+        log.warning("task %03d: no PRL params found, skipping RSI",
                     task_id)
         result["elapsed_s"] = time.monotonic() - t0
         return result
 
-    tl.info("pass2 input params: %s", pass15_params)
+    tl.info("RSI input params: %s", prl_params)
 
-    # ---- Pass 2 ----
-    pass2_dir = os.path.join(task_dir, "pass2")
+    # ---- RSI ----
+    rsi_dir = os.path.join(task_dir, "rsi")
 
-    if _phase_done(prior, "pass2"):
-        tl.info("pass2 already done (at %s), skipping",
-                prior["pass2"].get("ts", "?"))
-        log.info("task %03d: pass2 already done, skipping", task_id)
-        result["pass2"] = "done"
+    if _phase_done(prior, "rsi"):
+        tl.info("RSI already done (at %s), skipping",
+                prior["rsi"].get("ts", "?"))
+        log.info("task %03d: RSI already done, skipping", task_id)
+        result["rsi"] = "done"
         result["elapsed_s"] = time.monotonic() - t0
         return result
 
-    _update_status(status_path, "pass2", "running")
-    tl.info("Starting pass2")
+    _update_status(status_path, "rsi", "running")
+    tl.info("Starting RSI")
     rc = _run_subprocess(
-        _build_pass2_cmd(task_id, pass15_params, pass2_dir, cfg),
-        label=f"task {task_id:03d} pass2",
+        _build_rsi_cmd(task_id, prl_params, rsi_dir, cfg),
+        label=f"task {task_id:03d} RSI",
         task_log=tl,
-        log_dir=pass2_dir,
+        log_dir=rsi_dir,
         timeout_hours=cfg.get("timeout_hours", 12),
     )
     if rc != 0:
-        _update_status(status_path, "pass2", "failed", {"exit_code": rc})
-        result["pass2"] = "failed"
-        tl.error("pass2 FAILED (exit %d)", rc)
-        log.error("task %03d: pass2 FAILED (exit %d)", task_id, rc)
+        _update_status(status_path, "rsi", "failed", {"exit_code": rc})
+        result["rsi"] = "failed"
+        tl.error("RSI FAILED (exit %d)", rc)
+        log.error("task %03d: RSI FAILED (exit %d)", task_id, rc)
     else:
-        _update_status(status_path, "pass2", "done")
-        result["pass2"] = "done"
-        tl.info("pass2 completed successfully")
+        _update_status(status_path, "rsi", "done")
+        result["rsi"] = "done"
+        tl.info("RSI completed successfully")
 
         if uploader:
             try:
-                uploader.upload_pass2(task_id, pass2_dir, campaign_name)
+                uploader.upload_rsi(task_id, rsi_dir, campaign_name)
             except Exception as exc:
-                tl.warning("Drive upload (pass2) failed: %s", exc)
+                tl.warning("Drive upload (RSI) failed: %s", exc)
 
     elapsed = time.monotonic() - t0
     result["elapsed_s"] = elapsed
-    tl.info("Task %03d pipeline finished in %s  (p1=%s p2=%s)",
+    tl.info("Task %03d pipeline finished in %s  (afms=%s rsi=%s)",
             task_id, _fmt_duration(elapsed),
-            result["pass1"], result["pass2"])
+            result["afms"], result["rsi"])
     return result
 
 
@@ -649,22 +650,18 @@ def _save_campaign(campaign_path: str, cfg: dict, tasks: list,
     os.replace(tmp, campaign_path)
 
 
-def _auto_select_tasks(obs_version: str = "v8",
-                       max_tasks: int = None,
-                       catalog_path: str = None,
-                       shuffle: bool = False) -> list:
-    """Select tasks from the catalog.
+def _select_shuffled_tasks(max_tasks: int = None,
+                           catalog_path: str = None) -> list:
+    """Select tasks from the catalog in random order.
 
-    When shuffle=False (--auto), tasks are sorted by ascending sigma_err.
-    When shuffle=True (--auto2), tasks are returned in random order.
     Only tasks whose SDSS name appears in the catalog CSV are included.
+    Order is randomized; ``--max-tasks`` then truncates after the shuffle.
     """
     import glob as _glob
     import pickle as _pkl
+    import random
 
-    obs_dir = os.path.join(LENSING_DIR,
-                           f"observations_{obs_version}" if obs_version != "legacy"
-                           else "observations")
+    obs_dir = os.path.join(LENSING_DIR, "observations_v8expfixed")
     pkls = sorted(_glob.glob(os.path.join(obs_dir, "*.pkl")))
     if not pkls:
         raise FileNotFoundError(
@@ -672,7 +669,7 @@ def _auto_select_tasks(obs_version: str = "v8",
 
     catalog_tids = None
     if catalog_path:
-        cat = _load_task_catalog(catalog_path, obs_version)
+        cat = _load_task_catalog(catalog_path)
         import csv as _csv
         catalog_names = set()
         if os.path.isfile(catalog_path):
@@ -683,7 +680,7 @@ def _auto_select_tasks(obs_version: str = "v8",
                         if name:
                             catalog_names.add(name)
             except Exception as exc:
-                log.warning("Could not read catalog for auto mode: %s", exc)
+                log.warning("Could not read catalog for shuffle mode: %s", exc)
         if catalog_names:
             catalog_tids = set()
             for tid, info in cat.items():
@@ -704,17 +701,12 @@ def _auto_select_tasks(obs_version: str = "v8",
         except Exception as exc:
             log.warning("Skipping %s: %s", p, exc)
 
-    if shuffle:
-        import random
-        random.shuffle(entries)
-    else:
-        entries.sort(key=lambda x: x[1])
+    random.shuffle(entries)
 
     if max_tasks is not None and max_tasks > 0:
         entries = entries[:max_tasks]
 
-    order_label = "random order" if shuffle else "sorted by sigma_err ascending"
-    log.info("Auto-selected %d tasks (%s):", len(entries), order_label)
+    log.info("Shuffle-selected %d tasks (random order):", len(entries))
     for tid, serr, sobs in entries[:20]:
         log.info("  task %03d: sigma_obs=%.1f  sigma_err=%.1f", tid, sobs, serr)
     if len(entries) > 20:
@@ -723,7 +715,7 @@ def _auto_select_tasks(obs_version: str = "v8",
     return [e[0] for e in entries]
 
 
-def _load_task_catalog(csv_path: str, obs_version: str = "v8") -> dict:
+def _load_task_catalog(csv_path: str) -> dict:
     """Build task_id -> metadata dict from observation PKLs + catalog CSV.
 
     Always decodes the SDSS name from PKL filenames. If a catalog CSV is
@@ -733,9 +725,7 @@ def _load_task_catalog(csv_path: str, obs_version: str = "v8") -> dict:
     import csv as _csv
     import re
 
-    obs_dir = os.path.join(LENSING_DIR,
-                           f"observations_{obs_version}" if obs_version != "legacy"
-                           else "observations")
+    obs_dir = os.path.join(LENSING_DIR, "observations_v8expfixed")
 
     def _decode(encoded):
         m = re.match(r'(\d+)_(\d+)([mp])(\d+)_(\d+)', encoded)
@@ -784,7 +774,7 @@ def _load_task_catalog(csv_path: str, obs_version: str = "v8") -> dict:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Batch orchestrator: run pass1 + pass1.5 + pass2 "
+        description="Batch orchestrator: run AFMS + PRL + RSI "
                     "across multiple tasks with configurable concurrency")
 
     def _parse_task_list(raw: str) -> list:
@@ -802,17 +792,14 @@ def main():
                           "e.g. '0,18,50,86,100' or '0 18 50'")
     tgt.add_argument("--task-range", type=int, nargs=2, metavar=("START", "END"),
                      help="Range of task IDs [START, END)")
-    tgt.add_argument("--auto", action="store_true",
-                     help="Auto-select tasks sorted by lowest sigma_err "
-                          "from the observation catalog")
-    tgt.add_argument("--auto2", action="store_true",
+    tgt.add_argument("--shuffle", action="store_true",
                      help="Auto-select tasks in random order "
-                          "(same catalog filter as --auto, but shuffled)")
+                          "from the observation catalog")
     tgt.add_argument("--max-tasks", type=int, default=None,
-                     help="Limit auto/auto2 mode to N tasks")
+                     help="Limit --shuffle mode to N tasks")
     tgt.add_argument("--skip-tasks", type=_parse_task_list, default=[],
                      help="Task IDs to exclude, e.g. '5,12,99'. "
-                          "Applied after --tasks, --task-range, or --auto.")
+                          "Applied after --tasks, --task-range, or --shuffle.")
     tgt.add_argument("--catalog", type=str, default=DEFAULT_CATALOG,
                      help="Path to catalog CSV with 'SDSS Name' column "
                           "(default: %(default)s, or set LENSING_CATALOG)")
@@ -832,17 +819,25 @@ def main():
                            "already completed (reads status.json per task). "
                            "Requires --campaign-name to point at the existing "
                            "campaign directory.")
-    orch.add_argument("--skip-pass2", action="store_true",
-                      help="Only run pass1 + pass1.5, skip pass2")
+    orch.add_argument("--skip-rsi", action="store_true",
+                      help="Only run AFMS + PRL, skip RSI")
     orch.add_argument("--no-drive", action="store_true",
                       help="Disable Google Drive uploads")
 
     cred = parser.add_argument_group("Credentials")
     cred.add_argument("--api-key", type=str,
                       default=os.environ.get("OPENROUTER_API_KEY", ""),
-                      help="OpenRouter API key")
+                      help="API key for the chat-completions endpoint "
+                           "(or set OPENROUTER_API_KEY)")
+    cred.add_argument("--api-base-url", type=str,
+                      default=os.environ.get("LENSAGENT_API_BASE_URL", None),
+                      help="Full chat-completions URL "
+                           "(default: Requesty router; "
+                           "any OpenAI-compatible endpoint works, e.g. "
+                           "https://api.openai.com/v1/chat/completions). "
+                           "Or set LENSAGENT_API_BASE_URL.")
 
-    llm = parser.add_argument_group("LLM (shared across passes)")
+    llm = parser.add_argument_group("LLM (shared across phases)")
     llm.add_argument("--model", type=str,
                      default="vertex/google/gemini-3.1-pro-preview")
     llm.add_argument("--temperature", type=float, default=1.0)
@@ -850,10 +845,10 @@ def main():
     llm.add_argument("--max-tokens", type=int, default=40000)
     llm.add_argument("--reasoning-effort", type=str, default="high")
 
-    p1 = parser.add_argument_group("Pass 1 + 1.5")
-    p1.add_argument("--pass1-iterations", type=int, default=4500)
-    p1.add_argument("--pass1-max-llm-calls", type=int, default=1000)
-    p1.add_argument("--pass15-budget", type=int, default=150)
+    p1 = parser.add_argument_group("AFMS + PRL")
+    p1.add_argument("--afms-iterations", type=int, default=4500)
+    p1.add_argument("--afms-max-llm-calls", type=int, default=1000)
+    p1.add_argument("--prl-budget", type=int, default=150)
     p1.add_argument("--inner-steps", type=int, default=6)
     p1.add_argument("--seeds", type=int, default=20)
     p1.add_argument("--pso-runs", type=int, default=6)
@@ -871,16 +866,6 @@ def main():
     p1.add_argument("--global-patience", type=int, default=20)
     p1.add_argument("--scout-top-n", type=int, default=14)
     p1.add_argument("--ucb-c", type=float, default=1.0)
-    p1.add_argument("--obs-version", type=str, default="v8",
-                        choices=["legacy", "v3", "v4", "v5", "v6", "v7", "v8",
-                                 "v8exp", "v8expfixed", "v9", "v9exp"],
-                        help="Observation pkl version: "
-                             "v8=scalar noise, "
-                             "v8exp=v8+exp bg_rms, "
-                             "v8expfixed=v8exp*EXPTIME Poisson, "
-                             "v9=SDSS map noise, "
-                             "v9exp=v9+exp bg_rms")
-    p1.add_argument("--bg-noise", type=str, default="v3")
     p1.add_argument("--mask-stars", action="store_true", default=True)
     p1.add_argument("--no-mask-stars", dest="mask_stars", action="store_false")
     p1.add_argument("--model-scout", action="store_true", default=True)
@@ -896,21 +881,21 @@ def main():
                     action="store_false")
     p1.add_argument("--disable-image-feedback", action="store_true", default=False,
                     help="Ablation: keep numeric evaluation but remove all "
-                         "image attachments and auxiliary visual feedback in pass1.")
+                         "image attachments and auxiliary visual feedback in AFMS.")
     p1.add_argument("--finish-only-tool", action="store_true", default=False,
-                    help="Ablation: remove evaluate from the pass1 inner-loop "
+                    help="Ablation: remove evaluate from the AFMS inner-loop "
                          "tool schema while preserving the same step budget.")
 
-    p2 = parser.add_argument_group("Pass 2")
-    p2.add_argument("--pass2-iterations", type=int, default=100)
-    p2.add_argument("--pass2-inner-steps", type=int, default=5)
-    p2.add_argument("--pass2-max-llm-calls", type=int, default=300)
+    p2 = parser.add_argument_group("RSI")
+    p2.add_argument("--rsi-iterations", type=int, default=100)
+    p2.add_argument("--rsi-inner-steps", type=int, default=5)
+    p2.add_argument("--rsi-max-llm-calls", type=int, default=300)
     p2.add_argument("--n-subhalos", type=int, default=10)
     p2.add_argument("--threshold", type=float, default=5.0)
     p2.add_argument("--max-subhalo-mass-msun", type=float, default=1.0e10)
-    p2.add_argument("--pass2-kin-weight", type=float, default=0.5)
-    p2.add_argument("--pass2-pso", action="store_true", default=True)
-    p2.add_argument("--no-pass2-pso", dest="pass2_pso", action="store_false")
+    p2.add_argument("--rsi-kin-weight", type=float, default=0.5)
+    p2.add_argument("--rsi-pso", action="store_true", default=True)
+    p2.add_argument("--no-rsi-pso", dest="rsi_pso", action="store_false")
     p2.add_argument("--freeze-base-model", action="store_true", default=False)
 
     args = parser.parse_args()
@@ -923,19 +908,12 @@ def main():
         tasks = args.tasks
     elif args.task_range:
         tasks = list(range(args.task_range[0], args.task_range[1]))
-    elif getattr(args, 'auto', False):
-        tasks = _auto_select_tasks(
-            obs_version=args.obs_version,
+    elif getattr(args, 'shuffle', False):
+        tasks = _select_shuffled_tasks(
             max_tasks=args.max_tasks,
             catalog_path=args.catalog)
-    elif getattr(args, 'auto2', False):
-        tasks = _auto_select_tasks(
-            obs_version=args.obs_version,
-            max_tasks=args.max_tasks,
-            catalog_path=args.catalog,
-            shuffle=True)
     else:
-        parser.error("Specify --tasks, --task-range, --auto, or --auto2")
+        parser.error("Specify --tasks, --task-range, or --shuffle")
 
     if args.skip_tasks:
         skip_set = set(args.skip_tasks)
@@ -961,12 +939,12 @@ def main():
 
     cfg = {k: v for k, v in vars(args).items()
            if k not in ("tasks", "task_range", "campaign_name",
-                        "campaign_dir", "concurrency", "skip_pass2",
-                        "resume", "auto", "max_tasks", "skip_tasks",
+                        "campaign_dir", "concurrency", "skip_rsi",
+                        "resume", "shuffle", "max_tasks", "skip_tasks",
                         "no_drive", "catalog")}
     cfg["timeout_hours"] = args.timeout_hours
 
-    task_catalog = _load_task_catalog(args.catalog, args.obs_version)
+    task_catalog = _load_task_catalog(args.catalog)
 
     task_names = {}
     for tid in tasks:
@@ -989,13 +967,13 @@ def main():
     log.info("  Tasks     : %d  [%s]", len(tasks), ", ".join(task_strs))
     log.info("  Concurrency: %d tasks in parallel", args.concurrency)
     log.info("  Timeout   : %.1f hours per task", args.timeout_hours)
-    log.info("  Obs version: %s", cfg["obs_version"])
-    log.info("  Pass1: %d iter, %d LLM calls, pass1.5 budget %d",
-             cfg["pass1_iterations"], cfg["pass1_max_llm_calls"],
-             cfg["pass15_budget"])
-    log.info("  Pass2: %s (%d iter, %d subhalos, threshold %.1f sigma, max subhalo mass %.2e Msun)",
-             "ON" if not args.skip_pass2 else "OFF",
-             cfg["pass2_iterations"], cfg["n_subhalos"], cfg["threshold"],
+    log.info("  Obs version: v8expfixed")
+    log.info("  AFMS: %d iter, %d LLM calls, PRL budget %d",
+             cfg["afms_iterations"], cfg["afms_max_llm_calls"],
+             cfg["prl_budget"])
+    log.info("  RSI: %s (%d iter, %d subhalos, threshold %.1f sigma, max subhalo mass %.2e Msun)",
+             "ON" if not args.skip_rsi else "OFF",
+             cfg["rsi_iterations"], cfg["n_subhalos"], cfg["threshold"],
              cfg["max_subhalo_mass_msun"])
     log.info("  LLM: %s  temp=%.1f  top_p=%.2f  max_tokens=%d",
              cfg["model"], cfg["temperature"], cfg["top_p"],
@@ -1021,7 +999,7 @@ def main():
         sname = task_catalog.get(tid, {}).get("sdss_name", "")
         try:
             return _run_task(tid, campaign_dir, cfg,
-                             skip_pass2=args.skip_pass2,
+                             skip_rsi=args.skip_rsi,
                              uploader=uploader,
                              campaign_name=campaign_name,
                              sdss_name=sname)
@@ -1029,7 +1007,7 @@ def main():
             log.error("task %03d: UNHANDLED EXCEPTION: %s\n%s",
                       tid, e, traceback.format_exc())
             return {"task_id": tid, "sdss_name": sname,
-                    "pass1": "error", "pass2": "error",
+                    "afms": "error", "rsi": "error",
                     "error": str(e)}
 
     with ThreadPoolExecutor(max_workers=args.concurrency) as pool:
@@ -1042,11 +1020,11 @@ def main():
             except Exception as e:
                 sn = task_catalog.get(tid, {}).get("sdss_name", "")
                 r = {"task_id": tid, "sdss_name": sn,
-                     "pass1": "error", "pass2": "error",
+                     "afms": "error", "rsi": "error",
                      "error": str(e)}
             results.append(r)
             completed += 1
-            ok = r.get("pass1") == "done"
+            ok = r.get("afms") == "done"
             if not ok:
                 failed += 1
             elapsed_task = r.get("elapsed_s")
@@ -1063,9 +1041,9 @@ def main():
             else:
                 eta_str = ""
             sn_tag = f" [{r.get('sdss_name', '')}]" if r.get("sdss_name") else ""
-            log.info("[%d/%d] task %03d%s: p1=%s p2=%s%s%s%s",
+            log.info("[%d/%d] task %03d%s: afms=%s rsi=%s%s%s%s",
                      completed, len(tasks), tid, sn_tag,
-                     r.get("pass1"), r.get("pass2"),
+                     r.get("afms"), r.get("rsi"),
                      elapsed_str,
                      "  *** FAILED ***" if not ok else "",
                      eta_str)
@@ -1082,14 +1060,14 @@ def main():
     log.info("  Directory: %s", campaign_dir)
     log.info("-" * 70)
     for r in sorted(results, key=lambda x: x["task_id"]):
-        status = "OK  " if r.get("pass1") == "done" else "FAIL"
+        status = "OK  " if r.get("afms") == "done" else "FAIL"
         e = r.get("elapsed_s")
         dur = f"  {_fmt_duration(e)}" if e else ""
         sn = r.get("sdss_name", "")
         sn_col = f"  {sn}" if sn else ""
-        log.info("  task %03d: %s  p1=%-7s p2=%-7s%s%s",
+        log.info("  task %03d: %s  afms=%-7s rsi=%-7s%s%s",
                  r["task_id"], status,
-                 r.get("pass1"), r.get("pass2"), dur, sn_col)
+                 r.get("afms"), r.get("rsi"), dur, sn_col)
     log.info("=" * 70)
 
     _save_campaign(campaign_json, cfg, tasks, results,

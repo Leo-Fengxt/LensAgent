@@ -10,7 +10,7 @@ Usage (from the lensing/ directory)::
 Each system gets a .pkl file at:
     observations/<index>_<sdss_name>.pkl
 
-These can be loaded instantly by the funsearch runner via --task-id.
+These can be loaded instantly by the lensagent runner via --task-id.
 """
 
 import argparse

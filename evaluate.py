@@ -75,7 +75,7 @@ def evaluate_proposal(proposal, obs,
         image_chi2_reduced, etc.
     """
     try:
-        from funsearch.scoring import pack_mge_proposal
+        from lensagent.scoring import pack_mge_proposal
         proposal = pack_mge_proposal(
             proposal,
             lens_model_list=obs.kwargs_model.get('lens_model_list', []),
@@ -100,7 +100,7 @@ def evaluate_proposal(proposal, obs,
     kwargs_ll_final = proposal['kwargs_lens_light']
 
     try:
-        from funsearch.scoring import MODEL_COMBOS, ACTIVE_COMBO, FIXED_PARAMS, PRIOR_CENTERS, materialize_source_ties
+        from lensagent.scoring import MODEL_COMBOS, ACTIVE_COMBO, FIXED_PARAMS, PRIOR_CENTERS, materialize_source_ties
         combo = MODEL_COMBOS.get(ACTIVE_COMBO, {})
         ties = combo.get("shapelet_src_ties", {})
         fixed_src = FIXED_PARAMS.get('kwargs_source', [])

@@ -1,7 +1,7 @@
 """Quality, diversity, selection, and admission metrics.
 
 The scoring module is the sole place where tunable constants (alpha, beta,
-gamma, lambda) live.  Everything else in the funsearch package delegates
+gamma, lambda) live.  Everything else in the lensagent package delegates
 here for all scoring decisions.
 """
 
@@ -1105,10 +1105,10 @@ GAMMA = 0.5      # weight on boundary penalty
 DELTA = 2.0      # weight on residual_randomness (0-1 scale, lower=better)
 EPSILON = 10.0   # weight on physicality penalty (only when rmse > 0.05 threshold)
 
-ALPHA_P15 = 8.0  # pass1.5: stronger chi2 emphasis for fine-tuning
-BETA_P15 = 0.5   # pass1.5: kinematics unchanged
-GAMMA_P15 = 0.3  # pass1.5: lighter boundary (already near-optimal)
-DELTA_P15 = 1.0  # pass1.5: halved residual-randomness weight
+ALPHA_PRL = 8.0  # PRL: stronger chi2 emphasis for fine-tuning
+BETA_PRL = 0.5   # PRL: kinematics unchanged
+GAMMA_PRL = 0.3  # PRL: lighter boundary (already near-optimal)
+DELTA_PRL = 1.0  # PRL: halved residual-randomness weight
 DIVERSITY_K = 5  # k for k-nearest-neighbor diversity
 DEDUP_EPSILON = 0.01  # min L2 distance in normalized param space for dedup
 
@@ -1318,15 +1318,15 @@ def compute_quality(
     return q
 
 
-def compute_quality_pass15(
+def compute_quality_prl(
     eval_results: Dict[str, Any],
     proposal: Dict[str, Any],
-    alpha: float = ALPHA_P15,
-    beta: float = BETA_P15,
-    gamma: float = GAMMA_P15,
-    delta: float = DELTA_P15,
+    alpha: float = ALPHA_PRL,
+    beta: float = BETA_PRL,
+    gamma: float = GAMMA_PRL,
+    delta: float = DELTA_PRL,
 ) -> float:
-    """Pass-1.5 quality score: tighter chi2 emphasis for fine-tuning.
+    """PRL quality score: tighter chi2 emphasis for fine-tuning.
 
     Same structure as compute_quality but with rebalanced weights
     that prioritize chi2 closeness to 1.0 over secondary terms,

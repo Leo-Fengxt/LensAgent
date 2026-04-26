@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""CLI entry point for the FunSearch lensing proposal agent.
+"""CLI entry point for the LensAgent lensing proposal agent.
 
 Usage
 -----
 From the ``lensing/`` directory::
 
     # By task ID (auto-loads from observations/ directory):
-    python -m funsearch.runner --task-id 0 --api-key "$OPENROUTER_API_KEY"
+    python -m lensagent.runner --task-id 0 --api-key "$OPENROUTER_API_KEY"
 
     # By explicit pkl path:
-    python -m funsearch.runner --obs-path ./observations/000_foo.pkl --api-key "$OPENROUTER_API_KEY"
+    python -m lensagent.runner --obs-path ./observations/000_foo.pkl --api-key "$OPENROUTER_API_KEY"
 
     # Full options:
-    python -m funsearch.runner \\
+    python -m lensagent.runner \\
         --task-id 0 \\
         --api-key "$OPENROUTER_API_KEY" \\
         --model "openai/gpt-5" \\
@@ -25,30 +25,20 @@ import glob
 import logging
 import os
 import sys
+from typing import Optional
 
-import funsearch.scoring as _scoring
+import lensagent.scoring as _scoring
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s  %(name)-28s  %(levelname)-7s  %(message)s",
     datefmt="%H:%M:%S",
 )
-log = logging.getLogger("funsearch")
+log = logging.getLogger("lensagent")
 
 LENSING_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_OBS_DIRS = {
-    "legacy": os.path.join(LENSING_DIR, "observations"),
-    "v3": os.path.join(LENSING_DIR, "observations_v3"),
-    "v4": os.path.join(LENSING_DIR, "observations_v4"),
-    "v5": os.path.join(LENSING_DIR, "observations_v5"),
-    "v6": os.path.join(LENSING_DIR, "observations_v6"),
-    "v7": os.path.join(LENSING_DIR, "observations_v7"),
-    "v8": os.path.join(LENSING_DIR, "observations_v8"),
-    "v8exp": os.path.join(LENSING_DIR, "observations_v8exp"),
-    "v8expfixed": os.path.join(LENSING_DIR, "observations_v8expfixed"),
-    "v9": os.path.join(LENSING_DIR, "observations_v9"),
-    "v9exp": os.path.join(LENSING_DIR, "observations_v9exp"),
-}
+OBS_VERSION = "v8expfixed"
+OBS_DIR = os.path.join(LENSING_DIR, "observations_v8expfixed")
 
 DESC_MODEL = "vertex/google/gemini-3.1-flash-lite-preview"
 DESC_TEMPERATURE = 1.0
@@ -57,7 +47,8 @@ DESC_MAX_TOKENS = 32768
 DESC_REASONING = "high"
 
 
-def _make_desc_llm(api_key: str, log_path: str = "") -> "OpenRouterClient":
+def _make_desc_llm(api_key: str, log_path: str = "",
+                   base_url: Optional[str] = None) -> "OpenRouterClient":
     """Create the pinned description-only LLM client."""
     from .llm_client import OpenRouterClient
     desc = OpenRouterClient(
@@ -68,45 +59,30 @@ def _make_desc_llm(api_key: str, log_path: str = "") -> "OpenRouterClient":
         max_tokens=DESC_MAX_TOKENS,
         reasoning_effort=DESC_REASONING,
         reasoning_exclude=True,
+        base_url=base_url,
     )
     if log_path:
         desc.set_log_path(log_path)
     return desc
 
 
-def resolve_obs_path(task_id: int, version: str = "v4") -> str:
-    """Find the .pkl file for a given task ID and obs version."""
-    obs_dir = _OBS_DIRS.get(version, _OBS_DIRS["v4"])
-    pattern = os.path.join(obs_dir, f"{task_id:03d}_*.pkl")
+def resolve_obs_path(task_id: int) -> str:
+    """Find the v8expfixed .pkl file for a given task ID."""
+    pattern = os.path.join(OBS_DIR, f"{task_id:03d}_*.pkl")
     matches = sorted(glob.glob(pattern))
     if matches:
         return matches[0]
     raise FileNotFoundError(
-        f"No observation bundle found for task_id={task_id} in {obs_dir}.\n"
+        f"No observation bundle found for task_id={task_id} in {OBS_DIR}.\n"
         f"  Looked for: {pattern}\n"
-        f"  Run 'python regenerate_pkls.py --start {task_id} --end {task_id + 1} "
-        f"--version {version}' to generate it."
+        f"  Run 'python regenerate_pkls.py --start {task_id} --end {task_id + 1}' "
+        f"to generate it."
     )
-
-
-def infer_obs_version(obs_path: str | None, requested_version: str = "v4") -> str:
-    """Infer observation version from a pkl path, else use the request."""
-    if obs_path:
-        norm = os.path.normpath(obs_path)
-        for version, dirpath in sorted(
-            _OBS_DIRS.items(),
-            key=lambda item: len(os.path.basename(item[1])),
-            reverse=True,
-        ):
-            marker = os.path.basename(dirpath)
-            if marker in norm:
-                return version
-    return requested_version
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="FunSearch LLM proposal agent for gravitational lensing")
+        description="LensAgent LLM proposal agent for gravitational lensing")
 
     src = parser.add_mutually_exclusive_group(required=True)
     src.add_argument("--task-id", type=int,
@@ -115,30 +91,31 @@ def main() -> None:
     src.add_argument("--obs-path", type=str,
                      help="Explicit path to a saved ObservationBundle .pkl")
 
-    parser.add_argument("--obs-version", type=str, default="v8",
-                        choices=["legacy", "v3", "v4", "v5", "v6", "v7", "v8",
-                                 "v8exp", "v8expfixed", "v9", "v9exp"],
-                        help="Observation pkl version: "
-                             "v8=gain/calibvec scalar Poisson, "
-                             "v8exp=v8 Poisson + exp scalar bg_rms, "
-                             "v8expfixed=v8exp * EXPTIME Poisson, "
-                             "v9=SDSS map-based noise, "
-                             "v9exp=v9 exposure + exp scalar bg_rms")
-
     parser.add_argument("--api-key", type=str,
                         default=os.environ.get("OPENROUTER_API_KEY", ""),
-                        help="OpenRouter API key (or set OPENROUTER_API_KEY)")
+                        help="API key for the chat-completions endpoint "
+                             "(or set OPENROUTER_API_KEY)")
+    parser.add_argument("--api-base-url", type=str,
+                        default=os.environ.get("LENSAGENT_API_BASE_URL", None),
+                        help="Full chat-completions URL "
+                             "(default: Requesty router; "
+                             "any OpenAI-compatible endpoint works, e.g. "
+                             "https://api.openai.com/v1/chat/completions). "
+                             "Or set LENSAGENT_API_BASE_URL.")
     # --- LLM parameters ---
     llm_group = parser.add_argument_group("LLM configuration")
     llm_group.add_argument("--model", type=str, default="vertex/google/gemini-3.1-pro-preview",
-                           help="OpenRouter model identifier")
+                           help="Model identifier (provider-prefixed for "
+                                "Requesty/OpenRouter, plain for OpenAI native)")
     llm_group.add_argument("--temperature", type=float, default=1.0)
     llm_group.add_argument("--top-p", type=float, default=0.95)
     llm_group.add_argument("--max-tokens", type=int, default=32768,
                            help="Max tokens per LLM response")
     llm_group.add_argument("--reasoning-effort", type=str, default="high",
                            choices=["low", "medium", "high"],
-                           help="OpenRouter reasoning effort level")
+                           help="Reasoning effort (Requesty/OpenRouter "
+                                "extra-body field; ignored by endpoints "
+                                "that don't normalize this knob)")
 
     # --- Budget controls ---
     budget_group = parser.add_argument_group(
@@ -199,7 +176,7 @@ def main() -> None:
     out_group = parser.add_argument_group("Output")
     out_group.add_argument("--db-path", type=str, default=None,
                            help="Proposal database JSON path "
-                                "(default: funsearch_db_<task_id>.json)")
+                                "(default: lensagent_db_<task_id>.json)")
     out_group.add_argument("--resume", action="store_true",
                            help="Keep the existing database and continue from "
                                 "where the last run left off. Without this "
@@ -235,7 +212,7 @@ def main() -> None:
                                   "is within the measurement error (kin_chi2<=1)")
     model_group.add_argument("--kin-weight", type=float, default=None,
                              help="Weight for kinematic chi2 in quality score (BETA). "
-                                  "Default: 0.5 for pass1. Higher = stronger sigma penalty.")
+                                  "Default: 0.5 for AFMS. Higher = stronger sigma penalty.")
     model_group.add_argument("--mask-stars", action="store_true",
                              help="Build a likelihood mask to exclude peripheral "
                                   "stars from chi2 (Cutout2.0 deblend method)")
@@ -251,19 +228,11 @@ def main() -> None:
                                   "Combos 14-19 from exp's try_all_models notebook.")
     model_group.add_argument("--model-scout", action="store_true",
                              help="Run PSO scout on all mass families, pick "
-                                  "top N, then launch parallel FunSearch "
+                                  "top N, then launch parallel LensAgent "
                                   "agents (one per family, isolated DBs)")
     model_group.add_argument("--scout-top-n", type=int, default=3,
                              help="Number of top families to evolve in parallel "
                                   "(only with --model-scout)")
-    model_group.add_argument("--bg-noise", type=str, default="v3",
-                             choices=["fixed", "2d", "auto", "exp", "v3"],
-                             help="Background noise model: "
-                                  "'v3'=use pkl value as-is (Cutout3_0 pre-subtraction mad_std, default), "
-                                  "'exp'=mad_std on post-subtraction image, "
-                                  "'auto'=sigma-clipped std, "
-                                  "'2d'=spatially-varying Background2D, "
-                                  "'fixed'=keep pkl original")
     model_group.add_argument("--scheduler", type=str, default=None,
                              choices=["bandit"],
                              help="Enable bandit scheduler: shared-budget UCB "
@@ -297,12 +266,12 @@ def main() -> None:
     model_group.add_argument("--no-linear-solve", action="store_true",
                              help="Skip linear amplitude solver; LLM/PSO predict "
                                   "amp directly for both source and lens light.")
-    model_group.add_argument("--pass15-budget", type=int, default=0,
-                             help="LLM call budget for pass-1.5 exploitation phase. "
-                                  "After pass-1 ends, selects the best combo (closest "
-                                  "chi2 to 1.0 with sigma in range) and continues the "
-                                  "FunSearch loop on that combo only, with higher "
-                                  "numeric precision prompts. 0=disabled.")
+    model_group.add_argument("--prl-budget", type=int, default=0,
+                             help="LLM call budget for the PRL (Parameter Refinement "
+                                  "Loop) phase. After AFMS ends, selects the best combo "
+                                  "(closest chi2 to 1.0 with sigma in range) and "
+                                  "continues the LensAgent loop on that combo only, "
+                                  "with higher numeric precision prompts. 0=disabled.")
 
     args = parser.parse_args()
 
@@ -316,52 +285,30 @@ def main() -> None:
     from observation import ObservationBundle
     setup_custom_profiles()
 
-    obs_version = getattr(args, 'obs_version', 'v4')
     if args.obs_path:
-        obs_version = infer_obs_version(args.obs_path, obs_version)
         obs = ObservationBundle.load(args.obs_path)
         task_label = os.path.basename(args.obs_path).replace(".pkl", "")
         log.info("Loaded observation from %s (version=%s)",
-                 args.obs_path, obs_version)
+                 args.obs_path, OBS_VERSION)
     else:
-        obs_path = resolve_obs_path(args.task_id, version=obs_version)
+        obs_path = resolve_obs_path(args.task_id)
         obs = ObservationBundle.load(obs_path)
         task_label = f"task_{args.task_id:03d}"
-        log.info("Task %d: loaded %s (version=%s)", args.task_id, obs_path, obs_version)
+        log.info("Task %d: loaded %s (version=%s)",
+                 args.task_id, obs_path, OBS_VERSION)
 
-    _trust_pkl_versions = ("v8exp", "v8expfixed", "v9", "v9exp")
-    _trust_pkl = obs_version in _trust_pkl_versions
-
-    if not _trust_pkl:
-        if args.bg_noise == "2d":
-            from observation import apply_2d_background_rms
-            apply_2d_background_rms(obs)
-        elif args.bg_noise == "auto":
-            from observation import apply_auto_background_rms
-            apply_auto_background_rms(obs)
-        elif args.bg_noise == "exp":
-            from observation import apply_exp_background_rms
-            apply_exp_background_rms(obs)
-        elif args.bg_noise == "v3":
-            from observation import apply_v3_background_rms
-            apply_v3_background_rms(obs)
-    else:
-        kd = obs.kwargs_data_joint['multi_band_list'][0][0]
-        bg = kd.get('background_rms')
-        exp = kd.get('exposure_time')
-        from observation import _fmt_noise
-        log.info("Noise preserved from pkl (obs_version=%s): "
-                 "background_rms=%s  exposure_time=%s",
-                 obs_version,
-                 _fmt_noise(bg), _fmt_noise(exp))
+    kd = obs.kwargs_data_joint['multi_band_list'][0][0]
+    bg = kd.get('background_rms')
+    exp = kd.get('exposure_time')
+    from observation import _fmt_noise
+    log.info("Noise preserved from pkl (obs_version=%s): "
+             "background_rms=%s  exposure_time=%s",
+             OBS_VERSION,
+             _fmt_noise(bg), _fmt_noise(exp))
 
     if args.mask_stars:
         from observation import build_likelihood_mask
         build_likelihood_mask(obs)
-
-    if not _trust_pkl:
-        from observation import apply_mask_aligned_rms
-        apply_mask_aligned_rms(obs)
 
     if args.scheduler == "bandit":
         _run_bandit_mode(args, obs, task_label)
@@ -406,7 +353,7 @@ def main() -> None:
              obs.image_data.shape, obs.pixel_scale)
 
     if args.db_path is None:
-        args.db_path = f"funsearch_db_{task_label}.json"
+        args.db_path = f"lensagent_db_{task_label}.json"
 
     if not args.resume and os.path.exists(args.db_path):
         os.remove(args.db_path)
@@ -419,7 +366,7 @@ def main() -> None:
 
     from .llm_client import OpenRouterClient
     from .database import ProposalDatabase
-    from .outer_loop import FunSearchLoop
+    from .outer_loop import LensAgentLoop
 
     llm = OpenRouterClient(
         api_key=args.api_key,
@@ -429,6 +376,7 @@ def main() -> None:
         max_tokens=args.max_tokens,
         reasoning_effort=args.reasoning_effort,
         reasoning_exclude=True,
+        base_url=getattr(args, 'api_base_url', None),
     )
     if args.max_llm_calls is not None:
         llm.max_llm_calls = args.max_llm_calls
@@ -438,11 +386,12 @@ def main() -> None:
         desc_llm = _make_desc_llm(
             args.api_key,
             os.path.join(args.log_dir, "desc_trace.jsonl"),
+            base_url=getattr(args, 'api_base_url', None),
         )
 
     db = ProposalDatabase(args.db_path)
 
-    loop = FunSearchLoop(
+    loop = LensAgentLoop(
         obs=obs,
         llm=llm,
         db=db,
@@ -464,7 +413,7 @@ def main() -> None:
         finish_only_tool=getattr(args, 'finish_only_tool', False),
     )
 
-    log.info("Starting FunSearch  model=%s  desc_model=%s  db=%s",
+    log.info("Starting LensAgent  model=%s  desc_model=%s  db=%s",
              args.model, DESC_MODEL, args.db_path)
     log.info("  Budget: iterations=%d  inner_steps=%d  "
              "llm_calls=%s  seeds=%d  islands=%d  parallel=%d",
@@ -487,10 +436,10 @@ def _run_bandit_mode(args, obs, task_label):
     """Bandit scheduler: seed all combos via PSO, then UCB-allocate LLM budget."""
     import copy
     from .outer_loop import (
-        run_model_scout, FunSearchLoop, BanditScheduler, _ComboState,
+        run_model_scout, LensAgentLoop, BanditScheduler, _ComboState,
     )
     from .scoring import set_model_combo, MODEL_COMBOS, build_combo5, build_combo8
-    import funsearch.scoring as _scoring
+    import lensagent.scoring as _scoring
     from .llm_client import OpenRouterClient
     from .database import ProposalDatabase
 
@@ -530,6 +479,7 @@ def _run_bandit_mode(args, obs, task_label):
         max_tokens=args.max_tokens,
         reasoning_effort=args.reasoning_effort,
         reasoning_exclude=True,
+        base_url=getattr(args, 'api_base_url', None),
     )
     if args.max_llm_calls is not None:
         llm.max_llm_calls = args.max_llm_calls
@@ -539,6 +489,7 @@ def _run_bandit_mode(args, obs, task_label):
         desc_llm = _make_desc_llm(
             args.api_key,
             os.path.join(args.log_dir, "logs", "desc_trace.jsonl"),
+            base_url=getattr(args, 'api_base_url', None),
         )
 
     if args.blind:
@@ -571,7 +522,7 @@ def _run_bandit_mode(args, obs, task_label):
         combo_log_dir = os.path.join(args.log_dir, f"logs-{combo_id}")
         os.makedirs(combo_log_dir, exist_ok=True)
         db_path = os.path.join(args.log_dir,
-                               f"funsearch_db_{task_label}_c{combo_id}.json")
+                               f"lensagent_db_{task_label}_c{combo_id}.json")
         if not args.resume and os.path.exists(db_path):
             os.remove(db_path)
 
@@ -579,7 +530,7 @@ def _run_bandit_mode(args, obs, task_label):
 
         set_model_combo(combo_id)
 
-        loop = FunSearchLoop(
+        loop = LensAgentLoop(
             obs=combo_obs, llm=llm, db=db,
             n_seeds=args.seeds, n_islands=args.islands,
             inner_max_steps=args.inner_steps,
@@ -644,19 +595,20 @@ def _run_bandit_mode(args, obs, task_label):
 
     _bundle_bandit_results(args, combo_states, task_label, obs)
 
-    pass15_budget = getattr(args, 'pass15_budget', 0)
-    if pass15_budget > 0:
-        _run_pass15(args, combo_states, obs, llm, desc_llm, pass15_budget)
+    prl_budget = getattr(args, 'prl_budget', 0)
+    if prl_budget > 0:
+        _run_prl(args, combo_states, obs, llm, desc_llm, prl_budget)
 
 
-def _run_pass15(args, combo_states, obs, llm, desc_llm, budget):
-    """Pass 1.5: pure exploitation on the best combo from pass 1.
+def _run_prl(args, combo_states, obs, llm, desc_llm, budget):
+    """PRL (Parameter Refinement Loop): pure exploitation on the best
+    AFMS-selected combo.
 
     Selects the combo with the best valid chi2 (closest to 1.0, sigma in
-    range), resets the LLM budget, and continues the FunSearch loop on
+    range), resets the LLM budget, and continues the LensAgent loop on
     that combo alone. DB and islands are carried over — no reinitialization.
     """
-    from .outer_loop import FunSearchLoop
+    from .outer_loop import LensAgentLoop
     from . import scoring as S
     from .prompts import build_system_prompt
     import math
@@ -676,11 +628,11 @@ def _run_pass15(args, combo_states, obs, llm, desc_llm, budget):
                 best_cs = cs
 
     if best_cs is None:
-        log.warning("Pass 1.5: no combo has a valid entry (sigma in range). Skipping.")
+        log.warning("PRL: no combo has a valid entry (sigma in range). Skipping.")
         return
 
     log.info("=" * 60)
-    log.info("PASS 1.5: Exploitation phase")
+    log.info("PRL: Parameter Refinement Loop")
     log.info("  Selected combo %d (%s)  chi2=%.6f  sigma=%.1f",
              best_cs.combo_id, best_cs.label,
              best_cs.best_valid_chi2,
@@ -692,9 +644,9 @@ def _run_pass15(args, combo_states, obs, llm, desc_llm, budget):
     S.set_model_combo(best_cs.combo_id)
 
     prev_quality_fn = S.QUALITY_FN
-    S.set_quality_fn(S.compute_quality_pass15)
-    log.info("  Scoring: pass1.5 weights (alpha=%.1f beta=%.1f gamma=%.1f delta=%.1f)",
-             S.ALPHA_P15, S.BETA_P15, S.GAMMA_P15, S.DELTA_P15)
+    S.set_quality_fn(S.compute_quality_prl)
+    log.info("  Scoring: PRL weights (alpha=%.1f beta=%.1f gamma=%.1f delta=%.1f)",
+             S.ALPHA_PRL, S.BETA_PRL, S.GAMMA_PRL, S.DELTA_PRL)
 
     llm.total_prompt_tokens = 0
     llm.total_completion_tokens = 0
@@ -714,10 +666,10 @@ def _run_pass15(args, combo_states, obs, llm, desc_llm, budget):
     )
     system_prompt = base_prompt + precision_note
 
-    pass15_log_dir = os.path.join(args.log_dir, "pass15")
-    os.makedirs(pass15_log_dir, exist_ok=True)
+    prl_log_dir = os.path.join(args.log_dir, "prl")
+    os.makedirs(prl_log_dir, exist_ok=True)
 
-    loop = FunSearchLoop(
+    loop = LensAgentLoop(
         obs=best_cs.obs,
         llm=llm,
         db=best_cs.db,
@@ -730,7 +682,7 @@ def _run_pass15(args, combo_states, obs, llm, desc_llm, budget):
         pso_particles=0,
         pso_iterations=0,
         pso_runs=0,
-        log_dir=pass15_log_dir,
+        log_dir=prl_log_dir,
         early_stop_patience=args.early_stop or 10,
         early_stop_delta=getattr(args, 'early_stop_delta', 0.03),
         desc_llm=desc_llm,
@@ -742,20 +694,20 @@ def _run_pass15(args, combo_states, obs, llm, desc_llm, budget):
 
     import signal
 
-    def _kill15(signum, frame):
-        log.info("Pass 1.5 interrupted (signal %d). Saving...", signum)
+    def _kill_prl(signum, frame):
+        log.info("PRL interrupted (signal %d). Saving...", signum)
         raise KeyboardInterrupt
 
-    signal.signal(signal.SIGINT, _kill15)
-    signal.signal(signal.SIGTERM, _kill15)
+    signal.signal(signal.SIGINT, _kill_prl)
+    signal.signal(signal.SIGTERM, _kill_prl)
 
     try:
         loop.run(n_iterations=budget)
     except (KeyboardInterrupt, SystemExit):
-        log.info("Pass 1.5 interrupted. Saving results...")
+        log.info("PRL interrupted. Saving results...")
 
     log.info("=" * 60)
-    log.info("Pass 1.5 complete. DB now has %d entries.", best_cs.db.size)
+    log.info("PRL complete. DB now has %d entries.", best_cs.db.size)
     ranked = loop._rank_entries(best_cs.db.all_entries)
     if ranked:
         best = ranked[0]
@@ -768,19 +720,19 @@ def _run_pass15(args, combo_states, obs, llm, desc_llm, budget):
 
     S.set_quality_fn(prev_quality_fn)
 
-    _bundle_pass15_results(args, best_cs, obs, pass15_log_dir)
+    _bundle_prl_results(args, best_cs, obs, prl_log_dir)
 
 
-def _bundle_pass15_results(args, cs, obs, log_dir):
-    """Save pass 1.5 results alongside the pass 1 bundle."""
+def _bundle_prl_results(args, cs, obs, log_dir):
+    """Save PRL results alongside the AFMS bundle."""
     import json
     import shutil
     import glob as _g
-    from .outer_loop import FunSearchLoop
+    from .outer_loop import LensAgentLoop
     from . import scoring as S
 
     S.set_model_combo(cs.combo_id)
-    dummy = FunSearchLoop.__new__(FunSearchLoop)
+    dummy = LensAgentLoop.__new__(LensAgentLoop)
     dummy.obs = cs.obs
     ranked = dummy._rank_entries(cs.db.all_entries)
 
@@ -857,7 +809,7 @@ def _bundle_pass15_results(args, cs, obs, log_dir):
             cs.obs, fresh_er, log_dir, prefix="best_single",
             chi2=er.get("image_chi2_reduced", 0),
             sigma=er.get("sigma_predicted", 0) or 0,
-            combo_label=f"Pass1.5 — {cs.label}")
+            combo_label=f"PRL — {cs.label}")
     except Exception as exc:
         log.warning("Could not save single-best images: %s", exc)
 
@@ -866,7 +818,7 @@ def _bundle_pass15_results(args, cs, obs, log_dir):
         save_repro_bundle(
             log_dir,
             cs.obs,
-            stage="pass15",
+            stage="prl",
             proposal=best.proposal,
             model=combo_model,
             eval_results=fresh_er,
@@ -877,10 +829,10 @@ def _bundle_pass15_results(args, cs, obs, log_dir):
             },
         )
     except Exception as exc:
-        log.warning("Could not save pass1.5 reproducibility bundle: %s", exc)
+        log.warning("Could not save PRL reproducibility bundle: %s", exc)
 
     import zipfile
-    zip_path = os.path.join(log_dir, "pass15_results.zip")
+    zip_path = os.path.join(log_dir, "prl_results.zip")
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
         for root, dirs, files in os.walk(log_dir):
             for fn in files:
@@ -889,7 +841,7 @@ def _bundle_pass15_results(args, cs, obs, log_dir):
                 full = os.path.join(root, fn)
                 arcname = os.path.relpath(full, os.path.dirname(log_dir))
                 zf.write(full, arcname)
-    log.info("Pass 1.5 results saved to %s (zip: %s)", log_dir, zip_path)
+    log.info("PRL results saved to %s (zip: %s)", log_dir, zip_path)
 
 
 def _bundle_bandit_results(args, combo_states, task_label, obs):
@@ -925,7 +877,7 @@ def _bundle_bandit_results(args, combo_states, task_label, obs):
     sigma_err = obs.sigma_obs_err
 
     lines = [
-        f"FunSearch Bandit Results — {task_label}",
+        f"LensAgent Bandit Results — {task_label}",
         f"Observed sigma={sigma_obs:.1f} +/- {sigma_err:.1f} km/s", "",
         f"{'Combo':>6}  {'Model':<35}  {'Pulls':>6}  {'chi2':>10}  {'sigma':>8}  {'DB':>4}  {'Status':>8}",
         "=" * 90,
@@ -949,8 +901,8 @@ def _bundle_bandit_results(args, combo_states, task_label, obs):
         if os.path.exists(str(db_path)):
             shutil.copy2(str(db_path), os.path.join(combo_dir, "full_database.json"))
 
-        from .outer_loop import FunSearchLoop
-        dummy = FunSearchLoop.__new__(FunSearchLoop)
+        from .outer_loop import LensAgentLoop
+        dummy = LensAgentLoop.__new__(LensAgentLoop)
         dummy.obs = cs.obs
         dummy.db = cs.db
         dummy.eval_timeout_s = getattr(args, 'eval_timeout', 60)
@@ -1122,8 +1074,8 @@ def _bundle_bandit_results(args, combo_states, task_label, obs):
         best_dir = os.path.join(bundle_dir, "best")
         os.makedirs(best_dir, exist_ok=True)
 
-        from .outer_loop import FunSearchLoop
-        best_dummy = FunSearchLoop.__new__(FunSearchLoop)
+        from .outer_loop import LensAgentLoop
+        best_dummy = LensAgentLoop.__new__(LensAgentLoop)
         best_dummy.obs = overall_best_cs.obs
         best_dummy.db = overall_best_cs.db
         best_dummy.eval_timeout_s = getattr(args, 'eval_timeout', 60)
@@ -1206,7 +1158,7 @@ def _bundle_bandit_results(args, combo_states, task_label, obs):
                 overall_best_cs.obs, fresh_er, best_dir, prefix="best_single",
                 chi2=er.get("image_chi2_reduced", 0),
                 sigma=er.get("sigma_predicted", 0) or 0,
-                combo_label=f"Pass1 — {overall_best_cs.label}")
+                combo_label=f"AFMS — {overall_best_cs.label}")
         except Exception as exc:
             log.warning("Could not save single-best images: %s", exc)
 
@@ -1215,7 +1167,7 @@ def _bundle_bandit_results(args, combo_states, task_label, obs):
             save_repro_bundle(
                 best_dir,
                 overall_best_cs.obs,
-                stage="pass1",
+                stage="afms",
                 proposal=overall_best_entry.proposal,
                 model=best_combo_model,
                 eval_results=fresh_er,
@@ -1227,7 +1179,7 @@ def _bundle_bandit_results(args, combo_states, task_label, obs):
                 },
             )
         except Exception as exc:
-            log.warning("Could not save pass1 reproducibility bundle: %s", exc)
+            log.warning("Could not save AFMS reproducibility bundle: %s", exc)
 
         phys_ranked_best = best_dummy._rank_entries_by_physicality(
             overall_best_cs.db.all_entries)
@@ -1272,7 +1224,7 @@ def _bundle_bandit_results(args, combo_states, task_label, obs):
 
 
 def _run_agent_process(combo_id, obs, args, task_label):
-    """Run a full FunSearch loop in an isolated process for one combo."""
+    """Run a full LensAgent loop in an isolated process for one combo."""
     import logging
     prefix = f"[combo-{combo_id}]"
     logging.basicConfig(
@@ -1281,13 +1233,13 @@ def _run_agent_process(combo_id, obs, args, task_label):
         datefmt="%H:%M:%S",
         force=True,
     )
-    plog = logging.getLogger("funsearch")
+    plog = logging.getLogger("lensagent")
 
     if LENSING_DIR not in sys.path:
         sys.path.insert(0, LENSING_DIR)
 
     from .scoring import set_model_combo, build_combo5, build_combo8
-    import funsearch.scoring as _scoring
+    import lensagent.scoring as _scoring
     _scoring.NO_LINEAR_SOLVE = getattr(args, 'no_linear_solve', False)
     if combo_id == 5:
         build_combo5(args.n_gaussians)
@@ -1308,14 +1260,14 @@ def _run_agent_process(combo_id, obs, args, task_label):
     log_dir = os.path.join(args.log_dir, f"logs-{combo_id}")
     os.makedirs(log_dir, exist_ok=True)
     db_path = os.path.join(args.log_dir,
-                           f"funsearch_db_{task_label}_c{combo_id}.json")
+                           f"lensagent_db_{task_label}_c{combo_id}.json")
 
     if not args.resume and os.path.exists(db_path):
         os.remove(db_path)
 
     from .llm_client import OpenRouterClient
     from .database import ProposalDatabase
-    from .outer_loop import FunSearchLoop
+    from .outer_loop import LensAgentLoop
 
     llm = OpenRouterClient(
         api_key=args.api_key,
@@ -1325,6 +1277,7 @@ def _run_agent_process(combo_id, obs, args, task_label):
         max_tokens=args.max_tokens,
         reasoning_effort=args.reasoning_effort,
         reasoning_exclude=True,
+        base_url=getattr(args, 'api_base_url', None),
     )
     if args.max_llm_calls is not None:
         llm.max_llm_calls = args.max_llm_calls
@@ -1334,11 +1287,12 @@ def _run_agent_process(combo_id, obs, args, task_label):
         desc_llm = _make_desc_llm(
             args.api_key,
             os.path.join(log_dir, "desc_trace.jsonl"),
+            base_url=getattr(args, 'api_base_url', None),
         )
 
     db = ProposalDatabase(db_path)
 
-    loop = FunSearchLoop(
+    loop = LensAgentLoop(
         obs=obs,
         llm=llm,
         db=db,
@@ -1360,7 +1314,7 @@ def _run_agent_process(combo_id, obs, args, task_label):
         finish_only_tool=getattr(args, 'finish_only_tool', False),
     )
 
-    plog.info("Starting FunSearch  combo=%d  model=%s  desc=%s  db=%s",
+    plog.info("Starting LensAgent  combo=%d  model=%s  desc=%s  db=%s",
               combo_id, args.model, DESC_MODEL, db_path)
     loop.run(n_iterations=args.iterations)
 
@@ -1379,7 +1333,7 @@ def _run_scout_mode(args, obs, task_label):
     """Scout all 8 families, pick top N, launch parallel agents."""
     import multiprocessing as mp
 
-    import funsearch.scoring as _scoring
+    import lensagent.scoring as _scoring
     _scoring.CHI2_PENALTY = getattr(args, 'chi2_penalty', 'linear')
     _scoring.SUBTRACTED_CHI2 = getattr(args, 'subtracted_chi2', False)
     _scoring.NO_LINEAR_SOLVE = getattr(args, 'no_linear_solve', False)
@@ -1446,7 +1400,7 @@ def _run_scout_mode(args, obs, task_label):
     for combo_id, label, _ in processes:
         ld = os.path.join(args.log_dir, f"logs-{combo_id}")
         db_p = os.path.join(args.log_dir,
-                            f"funsearch_db_{task_label}_c{combo_id}.json")
+                            f"lensagent_db_{task_label}_c{combo_id}.json")
         log.info("  combo %2d %-35s  db=%s  logs=%s",
                  combo_id, label, db_p, ld)
     log.info("=" * 60)
@@ -1465,7 +1419,7 @@ def _bundle_results(args, processes, task_label, obs):
     os.makedirs(bundle_dir, exist_ok=True)
 
     summary_lines = [
-        f"FunSearch Results — {task_label}",
+        f"LensAgent Results — {task_label}",
         f"Observation: {obs.sdss_name}  z_lens={obs.z_lens:.4f}  z_source={obs.z_source:.4f}",
         f"Observed sigma={obs.sigma_obs:.1f} +/- {obs.sigma_obs_err:.1f} km/s",
         "",
@@ -1476,7 +1430,7 @@ def _bundle_results(args, processes, task_label, obs):
 
     for combo_id, label, p in processes:
         db_path = os.path.join(args.log_dir,
-                               f"funsearch_db_{task_label}_c{combo_id}.json")
+                               f"lensagent_db_{task_label}_c{combo_id}.json")
         log_dir = os.path.join(args.log_dir, f"logs-{combo_id}")
 
         if not os.path.exists(db_path):
@@ -1543,7 +1497,7 @@ def _bundle_results(args, processes, task_label, obs):
     best_log_dir = ""
     for combo_id, label, _ in processes:
         db_path = os.path.join(args.log_dir,
-                               f"funsearch_db_{task_label}_c{combo_id}.json")
+                               f"lensagent_db_{task_label}_c{combo_id}.json")
         if not os.path.exists(db_path):
             continue
         with open(db_path) as f:
@@ -1622,16 +1576,16 @@ def _bundle_results(args, processes, task_label, obs):
                     obs_repro, fresh_er, best_dir, prefix="best_single",
                     chi2=best_er.get("image_chi2_reduced", 0),
                     sigma=best_er.get("sigma_predicted", 0) or 0,
-                    combo_label=f"Pass1 — {best_combo[1]}")
+                    combo_label=f"AFMS — {best_combo[1]}")
         except Exception as exc:
-            log.warning("Could not save legacy pass1 single-best images: %s", exc)
+            log.warning("Could not save legacy AFMS single-best images: %s", exc)
 
         try:
             from .repro_bundle import save_repro_bundle
             save_repro_bundle(
                 best_dir,
                 obs_repro,
-                stage="pass1",
+                stage="afms",
                 proposal=best_proposal,
                 model=best_model,
                 eval_results=fresh_er,
@@ -1641,7 +1595,7 @@ def _bundle_results(args, processes, task_label, obs):
                 },
             )
         except Exception as exc:
-            log.warning("Could not save legacy pass1 reproducibility bundle: %s", exc)
+            log.warning("Could not save legacy AFMS reproducibility bundle: %s", exc)
 
     summary_text = "\n".join(summary_lines)
     with open(os.path.join(bundle_dir, "summary.txt"), "w") as f:

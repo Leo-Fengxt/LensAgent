@@ -12,20 +12,18 @@ python regenerate_pkls.py \
     --obs-dir observations \
     --out-dir observations_v8expfixed \
     --fits-dir fits_cache \
-    --version v8expfixed \
     --exp-catalog "catalog_final (1)_with_rms.csv" \
     --start 0 \
     --end 117
 ```
 
 ```bash
-python -m funsearch.orchestrator \
+python -m lensagent.orchestrator \
     --concurrency 4 \
     --campaign-name "v8ef_batch-final-8" \
     --api-key "$OPENROUTER_API_KEY" \
     --catalog "catalog_final (1).csv" \
-    --obs-version v8expfixed \
-    --auto2 \
+    --shuffle \
     --parallel-per-task 8 \
     --max-tasks 20 \
     --skip-tasks 1 \

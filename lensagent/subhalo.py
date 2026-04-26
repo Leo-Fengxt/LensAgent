@@ -1,9 +1,9 @@
-"""Subhalo detection and fitting for pass-2 analysis.
+"""Subhalo detection and fitting for the RSI phase.
 
 Implements the exp's Subhalo_detection.ipynb pipeline:
-1. Compute pull map from pass-1 residuals
+1. Compute pull map from PRL (AFMS+PRL) residuals
 2. Detect candidate locations via blob_log
-3. Evaluate NFW subhalo models appended to pass-1 params
+3. Evaluate NFW subhalo models appended to PRL params
 """
 
 import copy
@@ -24,7 +24,7 @@ def compute_pull_map(
     timeout_s: int = 30,
     legacy: bool = False,
 ) -> Tuple[Optional[np.ndarray], Optional[np.ndarray], Optional[Dict]]:
-    """Evaluate a pass-1 proposal and return its pull map.
+    """Evaluate an AFMS/PRL proposal and return its pull map.
 
     The pull map is (data - model) / noise, giving per-pixel significance.
 
@@ -45,7 +45,7 @@ def compute_pull_map(
         no_linear_solve=_S.NO_LINEAR_SOLVE,
         timeout_s=timeout_s)
     if result is None:
-        log.warning("Pass-1 evaluation failed: %s", err)
+        log.warning("AFMS/PRL evaluation failed: %s", err)
         return None, None, None
 
     model_image = result.get("model_image")
@@ -188,7 +188,7 @@ def _effective_image_chi2_reduced_for_bic(
     *,
     raw_bic: bool = False,
 ) -> float:
-    """Return the reduced image chi2 used to build the pass2 image logL."""
+    """Return the reduced image chi2 used to build the RSI image logL."""
     chi2_r = float(chi2_reduced)
     if raw_bic or chi2_r >= 1.0:
         return chi2_r
@@ -201,7 +201,7 @@ def image_log_likelihood_for_bic(
     *,
     raw_bic: bool = False,
 ) -> float:
-    """Return the image-only logL used by the pass2 delta-BIC calculation.
+    """Return the image-only logL used by the RSI delta-BIC calculation.
 
     Default behavior mirrors reduced chi2 values below 1.0 around the optimum
     at 1.0 before converting to image log-likelihood. This preserves the
@@ -225,7 +225,7 @@ def compute_delta_bic_from_reduced_chi2(
     *,
     raw_bic: bool = False,
 ) -> Dict[str, float]:
-    """Compute pass2 delta-BIC in the same explicit structure as the notebook."""
+    """Compute RSI delta-BIC in the same explicit structure as the notebook."""
     import math as _math
 
     n = max(int(n_pixels or 0), 1)
@@ -269,7 +269,7 @@ def evaluate_subhalo(
     timeout_s: int = 30,
     raw_bic: bool = False,
 ) -> Optional[Dict[str, Any]]:
-    """Evaluate a subhalo proposal (NFW appended to pass-1 model).
+    """Evaluate a subhalo proposal (NFW appended to PRL model).
 
     Returns dict with chi2, delta_bic, mass_msun, subhalo_params, or None
     on failure.
@@ -380,9 +380,9 @@ def apply_subhalo_mass_cap(
     max_subhalo_mass_msun: float = DEFAULT_MAX_SUBHALO_MASS_MSUN,
     invalid_chi2: float = INVALID_SUBHALO_MASS_CHI2,
 ) -> Dict[str, Any]:
-    """Annotate and hard-penalize pass-2 proposals above the subhalo mass cap.
+    """Annotate and hard-penalize RSI proposals above the subhalo mass cap.
 
-    Pass-2 appends NFW subhalos after the base pass-1 lens components.  This
+    RSI appends NFW subhalos after the base AFMS/PRL lens components.  This
     helper computes the derived M200 for those appended NFW components only.
     Any proposal with a non-finite mass or M200 above ``max_subhalo_mass_msun``
     is marked invalid and given a very poor chi2 so it is not admitted/ranked.
@@ -523,17 +523,17 @@ def register_subhalo_combo(
 ) -> Dict[str, Any]:
     """Register the subhalo-extended model as a scoring combo.
 
-    By default the base pass-1 params remain FREE (matching the exp's
+    By default the base AFMS/PRL params remain FREE (matching the exp's
     approach of copying kwargs_params and appending NFW). Only the NFW params
     are new.
 
     When *freeze_base_for_pso=True* (default, backward compatible), PSO
     seeds fix the base lens params and only explore NFW.
-    When *freeze_base_for_pso=False*, PSO seeds use pass-1 values as
+    When *freeze_base_for_pso=False*, PSO seeds use AFMS/PRL values as
     init with full bounds, matching the exp's joint optimization.
 
     When *freeze_base_model=True*, all original non-subhalo lens, lens-light,
-    and source parameters are fixed to the pass-1/pass1.5 best proposal so the
+    and source parameters are fixed to the AFMS/PRL best proposal so the
     optimization explores only the appended NFW subhalo parameters.
 
     Returns kwargs_model for the extended model.

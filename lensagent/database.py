@@ -73,7 +73,7 @@ class ProposalDatabase:
     Thread-safe: all mutations acquire an internal lock.
     """
 
-    def __init__(self, db_path: str = "funsearch_db.json"):
+    def __init__(self, db_path: str = "lensagent_db.json"):
         import threading
         self.db_path = Path(db_path)
         self._entries: List[ProposalEntry] = []

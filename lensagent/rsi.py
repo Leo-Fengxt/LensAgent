@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
-"""Pass-2 subhalo detection CLI.
+"""RSI (Residual-based Subhalo Inference) CLI.
 
-Loads the pass1.5 best-chi2 result from a pass-1 FunSearch run, detects
+Loads the PRL best-chi2 result from a LensAgent AFMS+PRL run, detects
 residual structure via blob detection, then runs PSO + LLM agent to fit
-NFW subhalo models. Base pass-1/pass1.5 params are reused with appended
-NFW terms, and can optionally be frozen during pass2 optimization.
+NFW subhalo models. Base AFMS/PRL params are reused with appended NFW
+terms, and can optionally be frozen during RSI optimization.
 
 Usage::
 
-    python -m funsearch.pass2 \\
+    python -m lensagent.rsi \\
         --task-id 19 \\
-        --pass1-results ./logs-v2-19/pass15/best_params.json \\
+        --prl-results ./logs-v2-19/prl/best_params.json \\
         --api-key "$OPENROUTER_API_KEY" \\
         --model "google/gemini-3.1-pro-preview" \\
         --n-subhalos 1 \\
         --threshold 5.0 \\
         --iterations 50 \\
         --inner-steps 5 \\
-        --log-dir ./logs-v2-19-pass2
+        --log-dir ./logs-v2-19-rsi
 """
 
 import argparse
@@ -36,13 +36,13 @@ logging.basicConfig(
     format="%(asctime)s  %(name)-28s  %(levelname)-7s  %(message)s",
     datefmt="%H:%M:%S",
 )
-log = logging.getLogger("funsearch.pass2")
+log = logging.getLogger("lensagent.rsi")
 
 LENSING_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-def _select_best_pass1(data: dict) -> dict:
-    """Select the single best entry from a pass-1 params JSON.
+def _select_best_prl(data: dict) -> dict:
+    """Select the single best entry from a PRL params JSON.
 
     Prefers the entry with the lowest rmse_poisson among those with
     sigma in range. Falls back to best chi2 if no physicality data.
@@ -53,7 +53,7 @@ def _select_best_pass1(data: dict) -> dict:
             return data
         if "overall_best" in data and "proposal" in data["overall_best"]:
             return data["overall_best"]
-        raise ValueError("Cannot find a proposal in the pass-1 results JSON")
+        raise ValueError("Cannot find a proposal in the PRL results JSON")
 
     sigma_obs = entries[0].get("sigma_observed", 0)
     sigma_err = entries[0].get("sigma_observed_err", 0)
@@ -68,7 +68,7 @@ def _select_best_pass1(data: dict) -> dict:
         valid = entries
 
     best = min(valid, key=lambda e: e.get("rmse_poisson", 1e6))
-    log.info("Selected pass-1 entry: id=%s  chi2=%.4f  sigma=%.1f  rmse_poisson=%.4f",
+    log.info("Selected PRL entry: id=%s  chi2=%.4f  sigma=%.1f  rmse_poisson=%.4f",
              best.get("entry_id", "?")[:8],
              best.get("image_chi2_reduced", 0),
              best.get("sigma_predicted", 0) or 0,
@@ -78,7 +78,8 @@ def _select_best_pass1(data: dict) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Pass-2 subhalo detection on gravitational lens residuals")
+        description="RSI: Residual-based Subhalo Inference on gravitational "
+                    "lens residuals")
 
     src = parser.add_mutually_exclusive_group(required=True)
     src.add_argument("--task-id", type=int,
@@ -86,20 +87,19 @@ def main() -> None:
     src.add_argument("--obs-path", type=str,
                      help="Explicit path to observation .pkl")
 
-    parser.add_argument("--obs-version", type=str, default="v8",
-                        choices=["legacy", "v3", "v4", "v5", "v6", "v7", "v8",
-                                 "v8exp", "v8expfixed", "v9", "v9exp"],
-                        help="Observation pkl version directory "
-                             "(v8=scalar, v8exp=v8+exp bg, "
-                             "v8expfixed=v8exp*EXPTIME, "
-                             "v9=SDSS maps, v9exp=v9+exp bg)")
-    parser.add_argument("--pass1-results", type=str, required=True,
-                        help="Path to pass1/pass15/best_params.json "
-                             "(pass1.5 best chi2). Deprecated phys/best-valid "
-                             "files should not be used for pass2.")
+    parser.add_argument("--prl-results", type=str, required=True,
+                        help="Path to afms/prl/best_params.json "
+                             "(PRL best chi2). Deprecated phys/best-valid "
+                             "files should not be used for RSI.")
     parser.add_argument("--api-key", type=str,
                         default=os.environ.get("OPENROUTER_API_KEY", ""),
-                        help="OpenRouter API key")
+                        help="API key for the chat-completions endpoint "
+                             "(or set OPENROUTER_API_KEY)")
+    parser.add_argument("--api-base-url", type=str,
+                        default=os.environ.get("LENSAGENT_API_BASE_URL", None),
+                        help="Full chat-completions URL (default: Requesty "
+                             "router; any OpenAI-compatible endpoint works). "
+                             "Or set LENSAGENT_API_BASE_URL.")
 
     llm = parser.add_argument_group("LLM")
     llm.add_argument("--model", type=str, default="vertex/google/gemini-3.1-pro-preview")
@@ -143,13 +143,11 @@ def main() -> None:
                         help="Pull map threshold in sigma for blob detection "
                              "(exp default: 5.0)")
     detect.add_argument("--max-subhalo-mass-msun", type=float, default=1.0e10,
-                        help="Hard derived M200 cap for each pass-2 NFW subhalo "
+                        help="Hard derived M200 cap for each RSI NFW subhalo "
                              "(default: 1e10 Msun)")
 
     out = parser.add_argument_group("Output")
-    out.add_argument("--log-dir", type=str, default="./pass2_results")
-    out.add_argument("--bg-noise", type=str, default="v3",
-                     choices=["fixed", "2d", "auto", "exp", "v3"])
+    out.add_argument("--log-dir", type=str, default="./rsi_results")
     out.add_argument("--mask-stars", action="store_true", default=True,
                      help="Build likelihood mask (default: on)")
     out.add_argument("--no-mask-stars", dest="mask_stars", action="store_false",
@@ -166,7 +164,8 @@ def main() -> None:
                      help="Skip linear amplitude solver; LLM/PSO predict "
                           "amp directly for both source and lens light.")
     out.add_argument("--kin-weight", type=float, default=0.1,
-                     help="Weight for kinematic chi2 in quality (pass1 default: 0.5, standalone pass2 default: 0.1)")
+                     help="Weight for kinematic chi2 in quality "
+                          "(AFMS default: 0.5, standalone RSI default: 0.1)")
     out.add_argument("--blind", action="store_true")
     out.add_argument("--clear-pso-cache", action="store_true",
                      help="Delete PSO cache and rerun from scratch")
@@ -177,13 +176,13 @@ def main() -> None:
                      help="Use monotonic raw image-logL delta-BIC "
                           "instead of the default exp-style "
                           "target-chi2=1 image-logL formula.")
-    out.add_argument("--pass2-pso", action="store_true",
-                     help="Run PSO seeding in pass2 to re-optimize all params "
+    out.add_argument("--rsi-pso", action="store_true",
+                     help="Run PSO seeding in RSI to re-optimize all params "
                           "(base + NFW) jointly before LLM takes over. "
                           "Uses --pso-particles, --pso-iterations, --pso-runs.")
     out.add_argument("--freeze-base-model", action="store_true",
                      help="Freeze all original non-subhalo lens, lens-light, "
-                          "and source parameters to the pass1.5 reference "
+                          "and source parameters to the PRL reference "
                           "solution so only appended NFW subhalo params are "
                           "optimized.")
 
@@ -191,16 +190,16 @@ def main() -> None:
 
     if not args.api_key:
         parser.error("--api-key required (or set OPENROUTER_API_KEY)")
-    pass1_results_norm = os.path.normpath(args.pass1_results)
-    pass1_results_name = os.path.basename(pass1_results_norm)
-    if pass1_results_name in {"best_params_phys.json", "best_valid_params.json"}:
-        parser.error("--pass1-results must point to pass1/pass15/best_params.json "
-                     "(pass1.5 best chi2), not deprecated "
-                     f"{pass1_results_name}")
-    expected_pass15_suffix = os.path.join("pass15", "best_params.json")
-    if not pass1_results_norm.endswith(expected_pass15_suffix):
-        log.warning("Expected pass1.5 best-chi2 params at .../%s, got %s",
-                    expected_pass15_suffix, args.pass1_results)
+    prl_results_norm = os.path.normpath(args.prl_results)
+    prl_results_name = os.path.basename(prl_results_norm)
+    if prl_results_name in {"best_params_phys.json", "best_valid_params.json"}:
+        parser.error("--prl-results must point to afms/prl/best_params.json "
+                     "(PRL best chi2), not deprecated "
+                     f"{prl_results_name}")
+    expected_prl_suffix = os.path.join("prl", "best_params.json")
+    if not prl_results_norm.endswith(expected_prl_suffix):
+        log.warning("Expected PRL best-chi2 params at .../%s, got %s",
+                    expected_prl_suffix, args.prl_results)
 
     if LENSING_DIR not in sys.path:
         sys.path.insert(0, LENSING_DIR)
@@ -209,69 +208,45 @@ def main() -> None:
     from observation import ObservationBundle
     setup_custom_profiles()
 
-    obs_version = getattr(args, 'obs_version', 'v4')
     if args.obs_path:
-        from funsearch.runner import infer_obs_version
-        obs_version = infer_obs_version(args.obs_path, obs_version)
         obs = ObservationBundle.load(args.obs_path)
     else:
-        from funsearch.runner import resolve_obs_path
-        obs_path = resolve_obs_path(args.task_id, version=obs_version)
+        from lensagent.runner import resolve_obs_path
+        obs_path = resolve_obs_path(args.task_id)
         obs = ObservationBundle.load(obs_path)
 
-    _trust_pkl_versions = ("v8exp", "v8expfixed", "v9", "v9exp")
-    _trust_pkl = obs_version in _trust_pkl_versions
-
-    if not _trust_pkl:
-        if args.bg_noise == "2d":
-            from observation import apply_2d_background_rms
-            apply_2d_background_rms(obs)
-        elif args.bg_noise == "auto":
-            from observation import apply_auto_background_rms
-            apply_auto_background_rms(obs)
-        elif args.bg_noise == "exp":
-            from observation import apply_exp_background_rms
-            apply_exp_background_rms(obs)
-        elif args.bg_noise == "v3":
-            from observation import apply_v3_background_rms
-            apply_v3_background_rms(obs)
-    else:
-        print(f"Noise preserved from pkl (obs_version={obs_version})")
+    print("Noise preserved from pkl (obs_version=v8expfixed)")
 
     if args.mask_stars:
         from observation import build_likelihood_mask
         build_likelihood_mask(obs)
 
-    if not _trust_pkl:
-        from observation import apply_mask_aligned_rms
-        apply_mask_aligned_rms(obs)
+    with open(args.prl_results) as f:
+        prl_data = json.load(f)
 
-    with open(args.pass1_results) as f:
-        pass1_data = json.load(f)
-
-    p1_dir = os.path.dirname(args.pass1_results)
+    prl_dir = os.path.dirname(args.prl_results)
     for entries_file in ["all_entries_params.json", "all_entries_by_physicality.json"]:
-        ef = os.path.join(p1_dir, entries_file)
+        ef = os.path.join(prl_dir, entries_file)
         if os.path.exists(ef):
             try:
                 with open(ef) as f:
                     all_data = json.load(f)
                 if "entries" in all_data:
-                    pass1_data["entries"] = all_data["entries"]
+                    prl_data["entries"] = all_data["entries"]
                     log.info("Loaded %d entries from %s", len(all_data["entries"]), ef)
                     break
             except Exception:
                 pass
 
-    best_entry = _select_best_pass1(pass1_data)
+    best_entry = _select_best_prl(prl_data)
 
-    p1_path = args.pass1_results
+    prl_path = args.prl_results
     if args.task_id is not None:
         expected = f"task_{args.task_id:03d}"
-        if expected not in p1_path and f"task_{args.task_id}" not in p1_path:
-            log.warning("WARNING: --task-id %d may not match --pass1-results %s. "
-                        "Ensure the observation and pass-1 params are from the same lens system.",
-                        args.task_id, p1_path)
+        if expected not in prl_path and f"task_{args.task_id}" not in prl_path:
+            log.warning("WARNING: --task-id %d may not match --prl-results %s. "
+                        "Ensure the observation and PRL params are from the same lens system.",
+                        args.task_id, prl_path)
     base_proposal = best_entry["proposal"]
     base_model = best_entry.get("model", {})
     combo_id = base_model.get("combo_id")
@@ -288,19 +263,19 @@ def main() -> None:
     if args.physicality:
         _scoring.PHYSICALITY_MODE = args.physicality
     if combo_id is not None:
-        from funsearch.scoring import set_model_combo
+        from lensagent.scoring import set_model_combo
         obs.kwargs_model = set_model_combo(combo_id)
-        log.info("Activated pass-1 combo %d from results", combo_id)
+        log.info("Activated AFMS combo %d from results", combo_id)
         _scoring.set_model_combo(combo_id)
     else:
         km = base_model.get("kwargs_model")
         if km:
             obs.kwargs_model = km
-            log.warning("No combo_id in pass-1 results; using raw kwargs_model")
+            log.warning("No combo_id in PRL results; using raw kwargs_model")
 
     log.info("=" * 60)
-    log.info("PASS 2: Subhalo Detection")
-    log.info("  Pass-1 results: %s", args.pass1_results)
+    log.info("RSI: Residual-based Subhalo Inference")
+    log.info("  PRL results: %s", args.prl_results)
     log.info("  Model: %s", obs.kwargs_model.get("lens_model_list"))
     log.info("  n_subhalos: %d  threshold: %.1f sigma  max_subhalo_mass: %.2e Msun",
              args.n_subhalos, args.threshold, args.max_subhalo_mass_msun)
@@ -315,11 +290,11 @@ def main() -> None:
                           register_subhalo_combo)
 
     legacy_pull = getattr(args, 'legacy_pull_map', False)
-    log.info("Computing pull map from pass-1 best fit... (legacy=%s)", legacy_pull)
+    log.info("Computing pull map from PRL best fit... (legacy=%s)", legacy_pull)
     pull_map, model_image, base_eval = compute_pull_map(
         base_proposal, obs, timeout_s=60, legacy=legacy_pull)
     if pull_map is None:
-        log.error("Failed to evaluate pass-1 proposal. Aborting.")
+        log.error("Failed to evaluate PRL proposal. Aborting.")
         return
 
     base_logL, n_base_params = compute_base_logL(base_proposal, obs)
@@ -349,7 +324,7 @@ def main() -> None:
 
     from .llm_client import OpenRouterClient
     from .database import ProposalDatabase
-    from .outer_loop import FunSearchLoop
+    from .outer_loop import LensAgentLoop
     from .runner import _make_desc_llm
     from .prompts import build_subhalo_system_prompt
     log.info("Kinematic weight (BETA): %.3f  CHI2_PENALTY: %s  SUBTRACTED_CHI2: %s  NO_LINEAR_SOLVE: %s",
@@ -357,7 +332,7 @@ def main() -> None:
              _scoring.NO_LINEAR_SOLVE)
     if args.physicality:
         log.info("PHYSICALITY: mode=%s", args.physicality)
-    use_pso = getattr(args, 'pass2_pso', False)
+    use_pso = getattr(args, 'rsi_pso', False)
     sub_obs = copy.deepcopy(obs)
     sub_km = register_subhalo_combo(
         base_proposal, obs, candidates,
@@ -379,9 +354,9 @@ def main() -> None:
         "kwargs_source": [_cp2.deepcopy(c) for c in _combo99.get("centers_src", [])],
     }
     if args.freeze_base_model:
-        log.info("Optimizer freeze enabled: non-subhalo params are fixed in pass2/PSO; evaluation-time overwrite is only a safety net for malformed proposals.")
+        log.info("Optimizer freeze enabled: non-subhalo params are fixed in RSI/PSO; evaluation-time overwrite is only a safety net for malformed proposals.")
 
-    def _freeze_pass2_proposal(proposal):
+    def _freeze_rsi_proposal(proposal):
         return _scoring.inject_fixed_params(
             proposal,
             fixed_params=_fixed,
@@ -396,13 +371,15 @@ def main() -> None:
         max_tokens=args.max_tokens,
         reasoning_effort=args.reasoning_effort,
         reasoning_exclude=True,
+        base_url=getattr(args, 'api_base_url', None),
     )
     if args.max_llm_calls:
         llm_client.max_llm_calls = args.max_llm_calls
     llm_client.set_log_path(os.path.join(args.log_dir, "llm_trace.jsonl"))
 
     desc_llm = _make_desc_llm(args.api_key,
-                               os.path.join(args.log_dir, "desc_trace.jsonl"))
+                              os.path.join(args.log_dir, "desc_trace.jsonl"),
+                              base_url=getattr(args, 'api_base_url', None))
 
     import signal
 
@@ -415,7 +392,7 @@ def main() -> None:
 
     n_base = len(base_proposal['kwargs_lens'])
 
-    def _postprocess_pass2_eval(proposal, eval_results):
+    def _postprocess_rsi_eval(proposal, eval_results):
         return apply_subhalo_mass_cap(
             eval_results,
             proposal,
@@ -439,18 +416,18 @@ def main() -> None:
     db = ProposalDatabase(db_path)
 
     if use_pso:
-        log.info("--pass2-pso: skipping manual seeding, PSO will seed the DB")
+        log.info("--rsi-pso: skipping manual seeding, PSO will seed the DB")
     else:
-        all_pass1_entries = pass1_data.get("entries",
-                            pass1_data.get("top3_in_image", []))
-        if not all_pass1_entries and "proposal" in pass1_data:
-            all_pass1_entries = [pass1_data]
+        all_prl_entries = prl_data.get("entries",
+                          prl_data.get("top3_in_image", []))
+        if not all_prl_entries and "proposal" in prl_data:
+            all_prl_entries = [prl_data]
 
         from .safe_eval import safe_evaluate as _seed_eval
         sigma_obs_val = obs.sigma_obs
         sigma_err_val = obs.sigma_obs_err
         valid_entries = []
-        for pe in all_pass1_entries:
+        for pe in all_prl_entries:
             p = pe.get("proposal")
             if not p:
                 continue
@@ -464,18 +441,18 @@ def main() -> None:
         valid_entries.sort(key=lambda e: abs(e.get("image_chi2_reduced", 1e6) - 1.0))
         valid_entries = valid_entries[:args.seeds]
 
-        log.info("Seeding pass2 DB with %d pass1 entries (+ %d NFW inits)", len(valid_entries), n_sub)
+        log.info("Seeding RSI DB with %d PRL entries (+ %d NFW inits)", len(valid_entries), n_sub)
         seed_count = 0
         for pe in valid_entries:
             p = copy.deepcopy(pe["proposal"])
             p["kwargs_lens"] = list(p.get("kwargs_lens", [])) + [dict(s) for s in nfw_inits]
-            p = _freeze_pass2_proposal(p)
+            p = _freeze_rsi_proposal(p)
             ev, err = _seed_eval(p, sub_obs, include_kinematics=True,
                                  subtracted_chi2=_scoring.SUBTRACTED_CHI2,
                                  no_linear_solve=_scoring.NO_LINEAR_SOLVE,
                                  timeout_s=args.eval_timeout)
             if ev:
-                ev = _postprocess_pass2_eval(p, ev)
+                ev = _postprocess_rsi_eval(p, ev)
             if ev:
                 if not ev.get("subhalo_mass_limit_ok", True):
                     log.info("Skipping manual seed: %s",
@@ -485,7 +462,7 @@ def main() -> None:
                 entry.island = seed_count % args.islands
                 db.add(entry)
                 seed_count += 1
-        log.info("Seeded %d entries into pass2 DB", seed_count)
+        log.info("Seeded %d entries into RSI DB", seed_count)
         db.update_all_diversity()
 
     system_prompt = build_subhalo_system_prompt(
@@ -494,7 +471,7 @@ def main() -> None:
         max_subhalo_mass_msun=args.max_subhalo_mass_msun,
         freeze_non_subhalo_params=args.freeze_base_model)
 
-    loop = FunSearchLoop(
+    loop = LensAgentLoop(
         obs=sub_obs,
         llm=llm_client,
         db=db,
@@ -515,7 +492,7 @@ def main() -> None:
         system_prompt_override=system_prompt,
         fixed_params=_fixed,
         prior_centers=_centers,
-        eval_results_postprocessor=_postprocess_pass2_eval,
+        eval_results_postprocessor=_postprocess_rsi_eval,
     )
 
     try:
@@ -538,7 +515,7 @@ def main() -> None:
                          threshold=args.threshold,
                          max_subhalo_mass_msun=args.max_subhalo_mass_msun)
     log.info("=" * 60)
-    log.info("Pass 2 complete. Results in %s", args.log_dir)
+    log.info("RSI complete. Results in %s", args.log_dir)
     log.info("=" * 60)
 
 
@@ -698,7 +675,7 @@ def _eval_final(best_chi2, best_phys, base_proposal, base_eval,
 def _save_results_bundle(log_dir, result, candidates, base_proposal, obs,
                          pull_map, best_entry=None, base_eval=None,
                          threshold=None, max_subhalo_mass_msun=None):
-    """Save pass-2 results for the simultaneous multi-subhalo fit."""
+    """Save RSI results for the simultaneous multi-subhalo fit."""
     import glob as _g
     import math
     import matplotlib
@@ -713,9 +690,9 @@ def _save_results_bundle(log_dir, result, candidates, base_proposal, obs,
     n_sub = len(candidates)
 
     lines = [
-        "Pass-2 Multi-Subhalo Detection Results",
+        "RSI Multi-Subhalo Detection Results",
         f"obs_sigma={sigma_obs:.1f} +/- {sigma_err:.1f} km/s",
-        f"Pass-1 baseline: chi2={base_chi2:.6f}  sigma_pred={base_sigma:.1f}",
+        f"PRL baseline: chi2={base_chi2:.6f}  sigma_pred={base_sigma:.1f}",
         f"Subhalos fitted simultaneously: {n_sub}",
         f"Hard subhalo mass cap: {max_subhalo_mass_msun:.2e} Msun" if max_subhalo_mass_msun is not None else "Hard subhalo mass cap: not set",
         "",
@@ -761,7 +738,7 @@ def _save_results_bundle(log_dir, result, candidates, base_proposal, obs,
             serializable["max_subhalo_mass_msun"] = max_subhalo_mass_msun
             serializable["model"] = {
                 "lens_model_list": obs.kwargs_model.get("lens_model_list", []),
-                "note": f"pass-1 base + {n_sub} NFW, all params optimized jointly",
+                "note": f"AFMS base + {n_sub} NFW, all params optimized jointly",
             }
             with open(path_json, "w") as f:
                 json.dump(serializable, f, indent=2, default=str)
@@ -792,7 +769,7 @@ def _save_results_bundle(log_dir, result, candidates, base_proposal, obs,
                     obs, best_r, log_dir, prefix="best_single",
                     chi2=best_r.get("chi2_reduced", 0),
                     sigma=best_r.get("sigma_predicted", 0) or 0,
-                    combo_label=f"Pass2 — {n_sub} NFW subhalos")
+                    combo_label=f"RSI — {n_sub} NFW subhalos")
             except Exception as exc:
                 log.warning("Could not save single-best images: %s", exc)
 
@@ -810,11 +787,11 @@ def _save_results_bundle(log_dir, result, candidates, base_proposal, obs,
         save_repro_bundle(
             log_dir,
             obs,
-            stage="pass2",
+            stage="rsi",
             proposal=repro_proposal,
             model={
                 "lens_model_list": obs.kwargs_model.get("lens_model_list", []),
-                "note": f"pass-1 base + {n_sub} NFW, all params optimized jointly",
+                "note": f"AFMS base + {n_sub} NFW, all params optimized jointly",
             },
             eval_results=repro_best,
             extra_arrays={"pull_map": pull_map},
@@ -832,9 +809,9 @@ def _save_results_bundle(log_dir, result, candidates, base_proposal, obs,
             },
         )
     except Exception as exc:
-        log.warning("Could not save pass2 reproducibility bundle: %s", exc)
+        log.warning("Could not save RSI reproducibility bundle: %s", exc)
 
-    zip_path = os.path.join(log_dir, "pass2_results.zip")
+    zip_path = os.path.join(log_dir, "rsi_results.zip")
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
         for root, dirs, files in os.walk(log_dir):
             for fname in files:
