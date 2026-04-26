@@ -53,17 +53,13 @@ The reproduction workflow assumes a catalog of target systems, downloaded imagin
 
 ```bash
 python download_all.py \
-    --catalog "catalog_with_rms.csv" \
-    --start 0 \
-    --end 117
+    --catalog "catalog_with_rms.csv"
 
 python regenerate_pkls.py \
     --obs-dir observations \
     --out-dir observations_output \
     --fits-dir fits_cache \
-    --exp-catalog "catalog_with_rms.csv" \
-    --start 0 \
-    --end 117
+    --exp-catalog "catalog_with_rms.csv"
 ```
 
 After this step, the regenerated observation bundles will live under `observations_output/`.
