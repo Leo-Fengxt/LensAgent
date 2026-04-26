@@ -38,7 +38,24 @@ log = logging.getLogger("lensagent")
 
 LENSING_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OBS_VERSION = "v8expfixed"
-OBS_DIR = os.path.join(LENSING_DIR, "observations_v8expfixed")
+DEFAULT_OBS_DIR_NAME = "observations_output"
+
+
+def _default_obs_dir() -> str:
+    """Resolve the default observation directory.
+
+    Priority:
+        1. LENSAGENT_OBS_DIR env var (absolute or relative to LENSING_DIR)
+        2. ``<LENSING_DIR>/observations_output``
+    """
+    override = os.environ.get("LENSAGENT_OBS_DIR")
+    if override:
+        return override if os.path.isabs(override) else os.path.join(
+            LENSING_DIR, override)
+    return os.path.join(LENSING_DIR, DEFAULT_OBS_DIR_NAME)
+
+
+OBS_DIR = _default_obs_dir()
 
 DESC_MODEL = "vertex/google/gemini-3.1-flash-lite-preview"
 DESC_TEMPERATURE = 1.0
@@ -66,17 +83,24 @@ def _make_desc_llm(api_key: str, log_path: str = "",
     return desc
 
 
-def resolve_obs_path(task_id: int) -> str:
-    """Find the v8expfixed .pkl file for a given task ID."""
-    pattern = os.path.join(OBS_DIR, f"{task_id:03d}_*.pkl")
+def resolve_obs_path(task_id: int, obs_dir: Optional[str] = None) -> str:
+    """Find the regenerated .pkl file for a given task ID.
+
+    The directory is selected from (highest priority first):
+        1. ``obs_dir`` argument (if provided)
+        2. ``LENSAGENT_OBS_DIR`` env var
+        3. The package default (``observations_output``)
+    """
+    base = obs_dir or _default_obs_dir()
+    pattern = os.path.join(base, f"{task_id:03d}_*.pkl")
     matches = sorted(glob.glob(pattern))
     if matches:
         return matches[0]
     raise FileNotFoundError(
-        f"No observation bundle found for task_id={task_id} in {OBS_DIR}.\n"
+        f"No observation bundle found for task_id={task_id} in {base}.\n"
         f"  Looked for: {pattern}\n"
         f"  Run 'python regenerate_pkls.py --start {task_id} --end {task_id + 1}' "
-        f"to generate it."
+        f"to generate it, or pass --obs-dir to point at the right folder."
     )
 
 
@@ -102,6 +126,13 @@ def main() -> None:
                              "any OpenAI-compatible endpoint works, e.g. "
                              "https://api.openai.com/v1/chat/completions). "
                              "Or set LENSAGENT_API_BASE_URL.")
+    parser.add_argument("--obs-dir", type=str,
+                        default=None,
+                        help="Directory containing regenerated observation "
+                             "bundles (NNN_<sdss_name>.pkl). "
+                             "Defaults to LENSAGENT_OBS_DIR env var, "
+                             f"or '{DEFAULT_OBS_DIR_NAME}/' next to the "
+                             "package.")
     # --- LLM parameters ---
     llm_group = parser.add_argument_group("LLM configuration")
     llm_group.add_argument("--model", type=str, default="vertex/google/gemini-3.1-pro-preview",
@@ -291,7 +322,7 @@ def main() -> None:
         log.info("Loaded observation from %s (version=%s)",
                  args.obs_path, OBS_VERSION)
     else:
-        obs_path = resolve_obs_path(args.task_id)
+        obs_path = resolve_obs_path(args.task_id, args.obs_dir)
         obs = ObservationBundle.load(obs_path)
         task_label = f"task_{args.task_id:03d}"
         log.info("Task %d: loaded %s (version=%s)",

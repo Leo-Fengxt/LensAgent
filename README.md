@@ -1,31 +1,147 @@
 # LensAgent: A Self Evolving Agent for Autonomous Physical Inference of Sub-galactic Structure
 
-This is an archival version of our research, and it is not intended nor recommended for production. A production-ready version is on our roadmap and will be coming soon!
+LensAgent is the public code release accompanying our manuscript. It provides a reproducible workflow for autonomous strong gravitational lens modeling, kinematic validation, and sub-galactic dark matter substructure inference.
+
+The project explores how a self-evolving, tool-using large language model can work alongside deterministic physics code to fit strong lens systems, use stellar kinematics to help break the mass-sheet degeneracy, and search residual structure for evidence of dark matter subhalos.
+
+Each cycle combines high-level reasoning over lens-model parameters, deterministic image and kinematic evaluation, physicality checks based on the Poisson equation, and an evolving proposal memory that reuses strong fits as context for later search.
+
+This public release is centered on the paper-aligned observation bundles and the current AFMS, PRL, and RSI workflow.
+
+## Pipeline Overview
+
+The public code follows the same three-stage workflow described in the paper:
+
+- **AFMS**: *Autonomous Fitting-driven Model Selection*  
+  LensAgent explores candidate macro-model families, seeded by PSO and allocated budget through a bandit-style scheduler.
+
+- **PRL**: *Parameter Refinement Loop*  
+  After AFMS identifies the strongest family, the agent refines the fit at higher numerical precision while retaining the accumulated search memory.
+
+- **RSI**: *Residual-based Subhalo Inference*  
+  The converged residuals are converted into pull maps, candidate subhalo locations are identified, and LensAgent reruns on the perturbed model to test localized NFW substructure.
+
+Together, these stages provide a training-free workflow for **strong gravitational lensing**, **dark matter subhalo detection**, and **autonomous physical inference**.
+
+## Repository Contents
+
+- `download_all.py`  
+  Downloads the FITS frames and PSF data needed to reconstruct the observation bundles.
+
+- `regenerate_pkls.py`  
+  Builds the observation bundles used for reproduction.
+
+- `lensagent/`  
+  The core agentic pipeline, including orchestration, scoring, prompting, proposal databases, AFMS/PRL/RSI logic, and the OpenAI-compatible chat-completions client.
+
+- `evaluate.py`, `observation.py`, `kinematic_api.py`  
+  Deterministic physical modeling and evaluation utilities used by the agent.
+
+## Installation
+
+Create a clean Python environment and install the dependencies:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+## Prepare the Data
+
+The reproduction workflow assumes a catalog of target systems, downloaded imaging products, and regenerated observation bundles in the paper's format.
 
 ```bash
 python download_all.py \
-    --catalog "catalog.csv" \
+    --catalog "catalog_with_rms.csv" \
     --start 0 \
     --end 117
 
 python regenerate_pkls.py \
     --obs-dir observations \
-    --out-dir observations_v8expfixed \
+    --out-dir observations_output \
     --fits-dir fits_cache \
-    --exp-catalog "catalog_final (1)_with_rms.csv" \
+    --exp-catalog "catalog_with_rms.csv" \
     --start 0 \
     --end 117
 ```
 
+After this step, the regenerated observation bundles will live under `observations_output/`.
+
+## Run LensAgent
+
+The command below reproduces the paper-aligned run. It launches the AFMS + PRL + RSI pipeline across a shuffled subset of catalog systems and resumes any previously completed tasks within the same campaign directory.
+
 ```bash
 python -m lensagent.orchestrator \
     --concurrency 4 \
-    --campaign-name "v8ef_batch-final-8" \
+    --campaign-name "run_batch-final" \
     --api-key "$OPENROUTER_API_KEY" \
-    --catalog "catalog_final (1).csv" \
+    --catalog "catalog_with_rms.csv" \
+    --obs-dir observations_output \
     --shuffle \
     --parallel-per-task 8 \
     --max-tasks 20 \
     --skip-tasks 1 \
     --resume
 ```
+
+### Optional: Use a Different OpenAI-Compatible Endpoint
+
+Requesty is the default provider in this public release. If you prefer other OpenAI-compatible chat-completions endpoint, pass `--api-base-url` (or set `LENSAGENT_API_BASE_URL`):
+
+```bash
+python -m lensagent.orchestrator \
+    --concurrency 4 \
+    --campaign-name "run_batch-final" \
+    --api-key "$OPENAI_API_KEY" \
+    --api-base-url "https://api.openai.com/v1/chat/completions" \
+    --model "gpt-5" \
+    --catalog "catalog_with_rms.csv" \
+    --shuffle \
+    --parallel-per-task 8 \
+    --max-tasks 20 \
+    --skip-tasks 1 \
+    --resume
+```
+
+## Output Structure
+
+Campaign outputs are written under:
+
+```text
+runs/<campaign-name>/
+```
+
+Each task stores its intermediate and final artifacts in:
+
+- `afms/`
+- `afms/prl/`
+- `rsi/`
+
+along with `status.json`, `task.log`, and the campaign-level `orchestrator.log`.
+
+## Important Notes
+
+- This repository is focused on reproducing the paper's public pipeline and results.
+- The public code path supports the given observation format only.
+- `--shuffle` selects tasks in random order from the catalog-matched observation pool; `--resume` allows interrupted campaigns to continue safely within the same campaign directory.
+
+## Citation
+
+
+```bibtex
+@misc{feng2026lensagentselfevolvingagent,
+  title={LensAgent: A Self Evolving Agent for Autonomous Physical Inference of Sub-galactic Structure},
+  author={Xiaotang Feng and Zihan Wang and Zilang Shu and Jean-Paul Kneib and Philip Torr},
+  year={2026},
+  eprint={2604.03691},
+  archivePrefix={arXiv},
+  primaryClass={astro-ph.GA},
+  url={https://arxiv.org/abs/2604.03691},
+}
+```
+
+## License
+
+This repository is released under the BSD 3-Clause license. See `LICENSE` for details.

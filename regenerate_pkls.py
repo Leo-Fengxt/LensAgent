@@ -267,7 +267,7 @@ def main():
     parser.add_argument("--end", type=int, default=115)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--obs-dir", type=str, default="observations")
-    parser.add_argument("--out-dir", type=str, default="observations_v8expfixed")
+    parser.add_argument("--out-dir", type=str, default="observations_output")
     parser.add_argument("--fits-dir", type=str, default="fits_cache")
     parser.add_argument("--exp-catalog", type=str, default=None,
                         help="CSV with background_rms_i column "

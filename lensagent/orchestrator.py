@@ -68,6 +68,21 @@ DEFAULT_CATALOG = os.environ.get(
     "LENSING_CATALOG",
     os.path.join(LENSING_DIR, "catalog.csv"),
 )
+DEFAULT_OBS_DIR_NAME = "observations_output"
+
+
+def _default_obs_dir() -> str:
+    """Resolve the default observation directory.
+
+    Priority:
+        1. LENSAGENT_OBS_DIR env var (absolute or relative to LENSING_DIR)
+        2. ``<LENSING_DIR>/observations_output``
+    """
+    override = os.environ.get("LENSAGENT_OBS_DIR")
+    if override:
+        return override if os.path.isabs(override) else os.path.join(
+            LENSING_DIR, override)
+    return os.path.join(LENSING_DIR, DEFAULT_OBS_DIR_NAME)
 
 _print_lock = Lock()
 
@@ -160,6 +175,8 @@ def _build_afms_cmd(task_id: int, log_dir: str, cfg: dict) -> list:
         cmd += ["--pso-gpu-url", cfg["pso_gpu_url"]]
     if cfg.get("api_base_url"):
         cmd += ["--api-base-url", cfg["api_base_url"]]
+    if cfg.get("obs_dir"):
+        cmd += ["--obs-dir", cfg["obs_dir"]]
     if cfg.get("disable_image_feedback"):
         cmd.append("--disable-image-feedback")
     if cfg.get("finish_only_tool"):
@@ -210,6 +227,8 @@ def _build_rsi_cmd(task_id: int, prl_results: str,
         cmd.append("--rsi-pso")
     if cfg.get("api_base_url"):
         cmd += ["--api-base-url", cfg["api_base_url"]]
+    if cfg.get("obs_dir"):
+        cmd += ["--obs-dir", cfg["obs_dir"]]
     if cfg.get("freeze_base_model"):
         cmd.append("--freeze-base-model")
     return cmd
@@ -651,7 +670,8 @@ def _save_campaign(campaign_path: str, cfg: dict, tasks: list,
 
 
 def _select_shuffled_tasks(max_tasks: int = None,
-                           catalog_path: str = None) -> list:
+                           catalog_path: str = None,
+                           obs_dir: str = None) -> list:
     """Select tasks from the catalog in random order.
 
     Only tasks whose SDSS name appears in the catalog CSV are included.
@@ -661,15 +681,15 @@ def _select_shuffled_tasks(max_tasks: int = None,
     import pickle as _pkl
     import random
 
-    obs_dir = os.path.join(LENSING_DIR, "observations_v8expfixed")
-    pkls = sorted(_glob.glob(os.path.join(obs_dir, "*.pkl")))
+    base = obs_dir or _default_obs_dir()
+    pkls = sorted(_glob.glob(os.path.join(base, "*.pkl")))
     if not pkls:
         raise FileNotFoundError(
-            f"No observation pkls found in {obs_dir}")
+            f"No observation pkls found in {base}")
 
     catalog_tids = None
     if catalog_path:
-        cat = _load_task_catalog(catalog_path)
+        cat = _load_task_catalog(catalog_path, obs_dir=base)
         import csv as _csv
         catalog_names = set()
         if os.path.isfile(catalog_path):
@@ -715,7 +735,7 @@ def _select_shuffled_tasks(max_tasks: int = None,
     return [e[0] for e in entries]
 
 
-def _load_task_catalog(csv_path: str) -> dict:
+def _load_task_catalog(csv_path: str, obs_dir: str = None) -> dict:
     """Build task_id -> metadata dict from observation PKLs + catalog CSV.
 
     Always decodes the SDSS name from PKL filenames. If a catalog CSV is
@@ -725,7 +745,7 @@ def _load_task_catalog(csv_path: str) -> dict:
     import csv as _csv
     import re
 
-    obs_dir = os.path.join(LENSING_DIR, "observations_v8expfixed")
+    obs_dir = obs_dir or _default_obs_dir()
 
     def _decode(encoded):
         m = re.match(r'(\d+)_(\d+)([mp])(\d+)_(\d+)', encoded)
@@ -837,6 +857,14 @@ def main():
                            "https://api.openai.com/v1/chat/completions). "
                            "Or set LENSAGENT_API_BASE_URL.")
 
+    data = parser.add_argument_group("Data")
+    data.add_argument("--obs-dir", type=str, default=None,
+                      help="Directory containing regenerated observation "
+                           "bundles (NNN_<sdss_name>.pkl). "
+                           "Defaults to LENSAGENT_OBS_DIR env var, "
+                           f"or '{DEFAULT_OBS_DIR_NAME}/' next to the "
+                           "package.")
+
     llm = parser.add_argument_group("LLM (shared across phases)")
     llm.add_argument("--model", type=str,
                      default="vertex/google/gemini-3.1-pro-preview")
@@ -903,6 +931,9 @@ def main():
     if not args.api_key:
         parser.error("--api-key required (or set OPENROUTER_API_KEY)")
 
+    obs_dir_resolved = args.obs_dir or _default_obs_dir()
+    args.obs_dir = obs_dir_resolved
+
     tasks = []
     if args.tasks:
         tasks = args.tasks
@@ -911,7 +942,8 @@ def main():
     elif getattr(args, 'shuffle', False):
         tasks = _select_shuffled_tasks(
             max_tasks=args.max_tasks,
-            catalog_path=args.catalog)
+            catalog_path=args.catalog,
+            obs_dir=obs_dir_resolved)
     else:
         parser.error("Specify --tasks, --task-range, or --shuffle")
 
@@ -944,7 +976,7 @@ def main():
                         "no_drive", "catalog")}
     cfg["timeout_hours"] = args.timeout_hours
 
-    task_catalog = _load_task_catalog(args.catalog)
+    task_catalog = _load_task_catalog(args.catalog, obs_dir=obs_dir_resolved)
 
     task_names = {}
     for tid in tasks:
@@ -967,7 +999,7 @@ def main():
     log.info("  Tasks     : %d  [%s]", len(tasks), ", ".join(task_strs))
     log.info("  Concurrency: %d tasks in parallel", args.concurrency)
     log.info("  Timeout   : %.1f hours per task", args.timeout_hours)
-    log.info("  Obs version: v8expfixed")
+    log.info("  Obs dir   : %s", obs_dir_resolved)
     log.info("  AFMS: %d iter, %d LLM calls, PRL budget %d",
              cfg["afms_iterations"], cfg["afms_max_llm_calls"],
              cfg["prl_budget"])

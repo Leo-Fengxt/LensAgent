@@ -100,6 +100,11 @@ def main() -> None:
                         help="Full chat-completions URL (default: Requesty "
                              "router; any OpenAI-compatible endpoint works). "
                              "Or set LENSAGENT_API_BASE_URL.")
+    parser.add_argument("--obs-dir", type=str, default=None,
+                        help="Directory containing regenerated observation "
+                             "bundles (NNN_<sdss_name>.pkl). "
+                             "Defaults to LENSAGENT_OBS_DIR env var, "
+                             "or 'observations_output/' next to the package.")
 
     llm = parser.add_argument_group("LLM")
     llm.add_argument("--model", type=str, default="vertex/google/gemini-3.1-pro-preview")
@@ -212,7 +217,7 @@ def main() -> None:
         obs = ObservationBundle.load(args.obs_path)
     else:
         from lensagent.runner import resolve_obs_path
-        obs_path = resolve_obs_path(args.task_id)
+        obs_path = resolve_obs_path(args.task_id, args.obs_dir)
         obs = ObservationBundle.load(obs_path)
 
     print("Noise preserved from pkl (obs_version=v8expfixed)")
