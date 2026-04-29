@@ -75,12 +75,15 @@ python -m lensagent.orchestrator \
     --api-key "$OPENROUTER_API_KEY" \
     --catalog "catalog_with_rms.csv" \
     --obs-dir observations_output \
+    --rsi-mode single \
     --shuffle \
     --parallel-per-task 8 \
     --max-tasks 20 \
     --skip-tasks 1 \
     --resume
 ```
+
+`--rsi-mode single` (default) fits the strongest residual candidate as a single subhalo, matching the paper's reported runs. Pass `--rsi-mode multi` to let the agent fit several candidates jointly (controlled by `--n-subhalos`).
 
 ### Optional: Use a Different OpenAI-Compatible Endpoint
 

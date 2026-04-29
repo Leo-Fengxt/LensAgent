@@ -209,66 +209,7 @@ _SERSIC_CENTER_SRC = _SRC_CENTER
 # Model combo definitions
 # ---------------------------------------------------------------------------
 
-MODEL_COMBOS: Dict[int, Dict[str, Any]] = {
-    1: {
-        "label": "Sersic ; Sersic",
-        "kwargs_model": {
-            "lens_model_list": ["EPL", "SHEAR", "MULTIPOLE"],
-            "lens_light_model_list": ["SERSIC_ELLIPSE"],
-            "source_light_model_list": ["SERSIC_ELLIPSE"],
-        },
-        "bounds_ll": [dict(_LL_BOUNDS)],
-        "bounds_src": [dict(_SRC_BOUNDS)],
-        "centers_ll": [dict(_LL_CENTER)],
-        "centers_src": [dict(_SRC_CENTER)],
-        "fixed_ll": [{}],
-        "fixed_src": [{}],
-    },
-    2: {
-        "label": "Sersic+Sersic ; Sersic+PolarShapelet",
-        "kwargs_model": {
-            "lens_model_list": ["EPL", "SHEAR", "MULTIPOLE"],
-            "lens_light_model_list": ["SERSIC_ELLIPSE", "SERSIC_ELLIPSE"],
-            "source_light_model_list": ["SERSIC_ELLIPSE", "SHAPELETS"],
-        },
-        "bounds_ll": [dict(_LL_BOUNDS), dict(_LL_BOUNDS)],
-        "bounds_src": [dict(_SRC_BOUNDS), dict(_POLAR_BOUNDS)],
-        "centers_ll": [dict(_LL_CENTER), dict(_SERSIC_CENTER_ENVELOPE)],
-        "centers_src": [dict(_SRC_CENTER), dict(_POLAR_CENTER)],
-        "fixed_ll": [{}, {}],
-        "fixed_src": [{}, {"n_max": 6}],
-    },
-    3: {
-        "label": "Sersic+Sersic+Shapelet ; Sersic+Shapelet",
-        "kwargs_model": {
-            "lens_model_list": ["EPL", "SHEAR", "MULTIPOLE"],
-            "lens_light_model_list": ["SERSIC_ELLIPSE", "SERSIC_ELLIPSE", "SHAPELETS"],
-            "source_light_model_list": ["SERSIC_ELLIPSE", "SHAPELETS"],
-        },
-        "bounds_ll": [dict(_LL_BOUNDS), dict(_LL_BOUNDS), dict(_POLAR_BOUNDS)],
-        "bounds_src": [dict(_SRC_BOUNDS), dict(_POLAR_BOUNDS)],
-        "centers_ll": [dict(_LL_CENTER), dict(_SERSIC_CENTER_ENVELOPE),
-                        dict(_POLAR_CENTER_LL)],
-        "centers_src": [dict(_SRC_CENTER), dict(_POLAR_CENTER)],
-        "fixed_ll": [{}, {}, {"n_max": 6}],
-        "fixed_src": [{}, {"n_max": 6}],
-    },
-    4: {
-        "label": "SLIT_STARLETS (requires slitronomy)",
-        "kwargs_model": {
-            "lens_model_list": ["EPL", "SHEAR", "MULTIPOLE"],
-            "lens_light_model_list": ["SERSIC_ELLIPSE"],
-            "source_light_model_list": ["SLIT_STARLETS"],
-        },
-        "bounds_ll": [dict(_LL_BOUNDS)],
-        "bounds_src": [{"n_scales": (3, 6), "beta": (0.01, 5.0),
-                        "center_x": (-1.0, 1.0), "center_y": (-1.0, 1.0)}],
-        "centers_ll": [dict(_LL_CENTER)],
-        "centers_src": [{"n_scales": 4, "beta": 1.0, "center_x": 0.0, "center_y": 0.0}],
-        "fixed_ll": [{}],
-        "fixed_src": [{"n_pixels": 14400, "scale": 1}],
-    },
-}
+MODEL_COMBOS: Dict[int, Dict[str, Any]] = {}
 
 _GAUSS_KAPPA_BOUNDS: Dict[str, Tuple[float, float]] = {
     "amp": (0.0, 1.0),
@@ -304,30 +245,8 @@ _GAUSSIAN_SUB_SIGMA: Dict[str, float] = {
 DEFAULT_MGE_COMPONENTS = 10
 
 
-def build_combo5(n_gaussians: int = 3) -> Dict[str, Any]:
-    """Build combo 5: EPL+SHEAR+MULTIPOLE + N Gaussian ellipse kappa blobs."""
-    lens_list = ["EPL", "SHEAR", "MULTIPOLE"] + ["GAUSSIAN"] * n_gaussians
-    lens_bounds = list(_LENS_BOUNDS) + [dict(_GAUSS_KAPPA_BOUNDS) for _ in range(n_gaussians)]
-    lens_centers = list(_LENS_CENTERS) + [dict(_GAUSS_KAPPA_CENTER) for _ in range(n_gaussians)]
-    lens_fixed = list(_LENS_FIXED) + [{}] * n_gaussians
-    combo = {
-        "label": f"EPL+{n_gaussians}xGaussKappa ; Sersic;Sersic",
-        "kwargs_model": {
-            "lens_model_list": lens_list,
-            "lens_light_model_list": ["SERSIC_ELLIPSE"],
-            "source_light_model_list": ["SERSIC_ELLIPSE"],
-        },
-        "bounds_lens": lens_bounds,
-        "centers_lens": lens_centers,
-        "fixed_lens": lens_fixed,
-        **_SIMPLE_LL,
-    }
-    MODEL_COMBOS[5] = combo
-    return combo
-
-
-def build_combo8(n_gauss: int = DEFAULT_MGE_COMPONENTS) -> Dict[str, Any]:
-    """Build combo 8: exp-style MGE mass/light with N Gaussian components."""
+def build_combo3(n_gauss: int = DEFAULT_MGE_COMPONENTS) -> Dict[str, Any]:
+    """Build combo 3: exp-style MGE mass/light with N Gaussian components."""
 
     def _build_indexed_mge_priors() -> Tuple[Dict[str, Any], Dict[str, Any]]:
         sigma_grid = np.logspace(np.log10(0.05), np.log10(20.0), n_gauss)
@@ -375,15 +294,16 @@ def build_combo8(n_gauss: int = DEFAULT_MGE_COMPONENTS) -> Dict[str, Any]:
         "centers_src": [dict(_SRC_CENTER)],
         "fixed_src": [{}],
     }
-    MODEL_COMBOS[8] = combo
+    MODEL_COMBOS[3] = combo
     return combo
 
 
 
 
 # ---------------------------------------------------------------------------
-# Expert mass model families (combos 6-13, from try_all_models.ipynb)
-# All use single Sersic light for both lens and source.
+# Mass model families (combos 1-2, 4-8). Combo 3 is the MGE family registered
+# at import time via build_combo3(). All use single Sersic light for both lens
+# and source unless otherwise noted.
 # ---------------------------------------------------------------------------
 
 _EPL_BOUNDS = _LENS_BOUNDS[0]
@@ -431,7 +351,7 @@ EXP_KWARGS_PARAMS_BASE: Dict[str, Any] = {
 }
 
 MODEL_COMBOS.update({
-    6: {
+    1: {
         "label": "Standard EPL",
         "kwargs_model": {
             "lens_model_list": ["EPL", "SHEAR"],
@@ -444,7 +364,7 @@ MODEL_COMBOS.update({
         "fixed_lens": [{}, dict(_SHEAR_FIXED)],
         **_SIMPLE_LL,
     },
-    7: {
+    2: {
         "label": "EPL + Multipoles",
         "kwargs_model": {
             "lens_model_list": ["EPL", "SHEAR", "MULTIPOLE"],
@@ -457,7 +377,7 @@ MODEL_COMBOS.update({
         "fixed_lens": list(_LENS_FIXED),
         **_SIMPLE_LL,
     },
-    9: {
+    4: {
         "label": "EPL + Convergence",
         "kwargs_model": {
             "lens_model_list": ["EPL", "SHEAR", "CONVERGENCE"],
@@ -476,7 +396,7 @@ MODEL_COMBOS.update({
         "fixed_lens": [{}, dict(_SHEAR_FIXED), {"ra_0": 0.0, "dec_0": 0.0}],
         **_SIMPLE_LL,
     },
-    10: {
+    5: {
         "label": "Stars (Hernquist) + DM (NFW)",
         "kwargs_model": {
             "lens_model_list": ["HERNQUIST", "NFW", "SHEAR"],
@@ -507,7 +427,7 @@ MODEL_COMBOS.update({
         "centers_src": [dict(_SRC_CENTER)],
         "fixed_src": [{}],
     },
-    11: {
+    6: {
         "label": "Group (EPL + SIS Satellites)",
         "kwargs_model": {
             "lens_model_list": ["EPL", "SHEAR", "SIS"],
@@ -542,7 +462,7 @@ MODEL_COMBOS.update({
         "centers_src": [dict(_SRC_CENTER)],
         "fixed_src": [{}],
     },
-    12: {
+    7: {
         "label": "Substructure (EPL + Gaussian Clumps)",
         "kwargs_model": {
             # lenstronomy does not ship GAUSSIAN_KAPPA; use the native
@@ -563,7 +483,7 @@ MODEL_COMBOS.update({
         "fixed_lens": [{}, dict(_SHEAR_FIXED), {}],
         **_SIMPLE_LL,
     },
-    13: {
+    8: {
         "label": "Merger/Dual Center",
         "kwargs_model": {
             "lens_model_list": ["EPL", "EPL", "SHEAR"],
@@ -594,8 +514,8 @@ MODEL_COMBOS.update({
 })
 
 # ---------------------------------------------------------------------------
-# Expert v2 model families (from try_all_models (1).ipynb)
-# PEMD/IEMD mass models + double Sersic lens light + GAUSSIAN_KAPPA
+# v2 model families (combos 9-14): PEMD/SIE mass models + double Sersic lens
+# light + GAUSSIAN_KAPPA. Activated alongside combos 1-8 by --model-v2.
 # ---------------------------------------------------------------------------
 
 _PEMD_BOUNDS: Dict[str, Tuple[float, float]] = {
@@ -646,7 +566,7 @@ _HERNQUIST_LL_CENTER: Dict[str, float] = {
 }
 
 MODEL_COMBOS.update({
-    14: {
+    9: {
         "label": "PEMD + Shear",
         "kwargs_model": {
             "lens_model_list": ["PEMD", "SHEAR"],
@@ -659,7 +579,7 @@ MODEL_COMBOS.update({
         "fixed_lens": [{}, dict(_SHEAR_FIXED)],
         **_SIMPLE_LL,
     },
-    15: {
+    10: {
         "label": "SIE + Shear",
         "kwargs_model": {
             "lens_model_list": ["SIE", "SHEAR"],
@@ -672,7 +592,7 @@ MODEL_COMBOS.update({
         "fixed_lens": [{}, dict(_SHEAR_FIXED)],
         **_SIMPLE_LL,
     },
-    16: {
+    11: {
         "label": "Stars (Hernquist) + DM (NFW) v2",
         "kwargs_model": {
             "lens_model_list": ["HERNQUIST", "NFW", "SHEAR"],
@@ -702,7 +622,7 @@ MODEL_COMBOS.update({
         "centers_src": [dict(_SRC_CENTER)],
         "fixed_src": [{}],
     },
-    17: {
+    12: {
         "label": "Group (EPL + SIS) v2",
         "kwargs_model": {
             "lens_model_list": ["EPL", "SHEAR", "SIS"],
@@ -733,7 +653,7 @@ MODEL_COMBOS.update({
         "centers_src": [dict(_SRC_CENTER)],
         "fixed_src": [{}],
     },
-    18: {
+    13: {
         "label": "Substructure (GAUSSIAN_KAPPA) v2",
         "kwargs_model": {
             "lens_model_list": ["EPL", "SHEAR", "GAUSSIAN_ELLIPSE_KAPPA"],
@@ -752,7 +672,7 @@ MODEL_COMBOS.update({
         "fixed_lens": [{}, dict(_SHEAR_FIXED), {}],
         **_SIMPLE_LL,
     },
-    19: {
+    14: {
         "label": "Merger/Dual Center v2",
         "kwargs_model": {
             "lens_model_list": ["EPL", "EPL", "SHEAR"],
@@ -776,11 +696,11 @@ MODEL_COMBOS.update({
 })
 
 # ---------------------------------------------------------------------------
-# Active priors (set by set_model_combo, default = combo 2)
+# Active priors (set by set_model_combo, default = combo 1)
 # ---------------------------------------------------------------------------
 
 
-build_combo8(DEFAULT_MGE_COMPONENTS)
+build_combo3(DEFAULT_MGE_COMPONENTS)
 
 
 def _inject_shapelet_src() -> None:
@@ -1093,7 +1013,7 @@ def set_model_combo(combo_id: int) -> Dict[str, Any]:
     return c["kwargs_model"]
 
 
-set_model_combo(2)
+set_model_combo(1)
 
 # ---------------------------------------------------------------------------
 # Tunable constants

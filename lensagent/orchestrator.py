@@ -187,6 +187,8 @@ def _build_afms_cmd(task_id: int, log_dir: str, cfg: dict) -> list:
 def _build_rsi_cmd(task_id: int, prl_results: str,
                    log_dir: str, cfg: dict) -> list:
     """Construct the RSI CLI command."""
+    n_sub = 1 if cfg.get("rsi_mode", "single") == "single" \
+        else int(cfg["n_subhalos"])
     cmd = [
         sys.executable, "-m", "lensagent.rsi",
         "--task-id", str(task_id),
@@ -202,7 +204,7 @@ def _build_rsi_cmd(task_id: int, prl_results: str,
         "--max-llm-calls", str(cfg["rsi_max_llm_calls"]),
         "--seeds", str(cfg["seeds"]),
         "--pso-runs", str(cfg["pso_runs"]),
-        "--n-subhalos", str(cfg["n_subhalos"]),
+        "--n-subhalos", str(n_sub),
         "--threshold", str(cfg["threshold"]),
         "--max-subhalo-mass-msun", str(cfg["max_subhalo_mass_msun"]),
         "--islands", str(cfg["islands"]),
@@ -915,10 +917,19 @@ def main():
                          "tool schema while preserving the same step budget.")
 
     p2 = parser.add_argument_group("RSI")
+    p2.add_argument("--rsi-mode", type=str, default="single",
+                    choices=["single", "multi"],
+                    help="RSI subhalo mode. 'single' (default) forces "
+                         "--n-subhalos 1 to fit the strongest residual "
+                         "candidate; 'multi' uses --n-subhalos as given "
+                         "(default 10) and lets the agent fit several "
+                         "candidates jointly.")
     p2.add_argument("--rsi-iterations", type=int, default=100)
     p2.add_argument("--rsi-inner-steps", type=int, default=5)
     p2.add_argument("--rsi-max-llm-calls", type=int, default=300)
-    p2.add_argument("--n-subhalos", type=int, default=10)
+    p2.add_argument("--n-subhalos", type=int, default=10,
+                    help="Number of subhalo candidates passed to the RSI "
+                         "agent. Ignored when --rsi-mode single (forced to 1).")
     p2.add_argument("--threshold", type=float, default=5.0)
     p2.add_argument("--max-subhalo-mass-msun", type=float, default=1.0e10)
     p2.add_argument("--rsi-kin-weight", type=float, default=0.5)
@@ -1003,9 +1014,12 @@ def main():
     log.info("  AFMS: %d iter, %d LLM calls, PRL budget %d",
              cfg["afms_iterations"], cfg["afms_max_llm_calls"],
              cfg["prl_budget"])
-    log.info("  RSI: %s (%d iter, %d subhalos, threshold %.1f sigma, max subhalo mass %.2e Msun)",
+    rsi_n_sub = 1 if cfg.get("rsi_mode", "single") == "single" \
+        else cfg["n_subhalos"]
+    log.info("  RSI: %s  mode=%s (n_subhalos=%d, %d iter, threshold %.1f sigma, max subhalo mass %.2e Msun)",
              "ON" if not args.skip_rsi else "OFF",
-             cfg["rsi_iterations"], cfg["n_subhalos"], cfg["threshold"],
+             cfg.get("rsi_mode", "single"),
+             rsi_n_sub, cfg["rsi_iterations"], cfg["threshold"],
              cfg["max_subhalo_mass_msun"])
     log.info("  LLM: %s  temp=%.1f  top_p=%.2f  max_tokens=%d",
              cfg["model"], cfg["temperature"], cfg["top_p"],

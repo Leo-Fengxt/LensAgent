@@ -1768,7 +1768,7 @@ def run_model_scout(
     Returns list of (combo_id, label, bic) sorted best-first.
     """
     if combo_ids is None:
-        combo_ids = list(range(6, 14))
+        combo_ids = list(range(1, 9))
 
     if cache_path and Path(cache_path).exists():
         with open(cache_path) as f:

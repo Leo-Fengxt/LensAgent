@@ -223,17 +223,15 @@ def main() -> None:
         "Model architecture",
         "Select the light model combo. Mass model (EPL+SHEAR+MULTIPOLE) is "
         "shared by all combos.")
-    model_group.add_argument("--model-combo", type=int, default=2,
-                             choices=list(range(1, 14)),
-                             help="1-5=light combos, 6=EPL+SHEAR, 7=EPL+SHEAR+MULTI, "
-                                  "8=MGE, 9=EPL+CONV, 10=Hernq+NFW, 11=EPL+SIS, "
-                                  "12=EPL+Gauss, 13=DualEPL")
-    model_group.add_argument("--n-gaussians", type=int, default=3,
-                             help="Number of GAUSSIAN_ELLIPSE_KAPPA mass blobs "
-                                  "added on top of EPL (only for --model-combo 5)")
+    model_group.add_argument("--model-combo", type=int, default=1,
+                             choices=list(range(1, 15)),
+                             help="1=EPL+SHEAR (default), 2=EPL+SHEAR+MULTI, "
+                                  "3=MGE, 4=EPL+CONV, 5=Hernq+NFW, 6=EPL+SIS, "
+                                  "7=EPL+Gauss, 8=DualEPL, 9-14=v2 families "
+                                  "(PEMD/SIE + double Sersic + GAUSSIAN_KAPPA)")
     model_group.add_argument("--n-mge", type=int, default=_scoring.DEFAULT_MGE_COMPONENTS,
                              help="Number of Gaussian components in the native "
-                                  "MULTI_GAUSSIAN arrays for combo 8")
+                                  "MULTI_GAUSSIAN arrays for combo 3")
     model_group.add_argument("--blind", action="store_true",
                              help="Blind mode: quality uses only chi2_image, "
                                   "no velocity/kinematic/randomness info given "
@@ -254,9 +252,9 @@ def main() -> None:
                                   "'active'=add to quality function and show "
                                   "to LLM agent. Default: off.")
     model_group.add_argument("--model-v2", action="store_true",
-                             help="Include v2 model combos (PEMD, IEMD, double Sersic "
+                             help="Include v2 model combos (PEMD, SIE, double Sersic "
                                   "lens light, GAUSSIAN_KAPPA) in the scout. "
-                                  "Combos 14-19 from exp's try_all_models notebook.")
+                                  "Combos 9-14.")
     model_group.add_argument("--model-scout", action="store_true",
                              help="Run PSO scout on all mass families, pick "
                                   "top N, then launch parallel LensAgent "
@@ -349,12 +347,10 @@ def main() -> None:
         _run_scout_mode(args, obs, task_label)
         return
 
-    from .scoring import set_model_combo, MODEL_COMBOS, build_combo5, build_combo8
+    from .scoring import set_model_combo, MODEL_COMBOS, build_combo3
     _scoring.NO_LINEAR_SOLVE = getattr(args, 'no_linear_solve', False)
-    if args.model_combo == 5:
-        build_combo5(args.n_gaussians)
-    if args.model_combo == 8:
-        build_combo8(args.n_mge)
+    if args.model_combo == 3:
+        build_combo3(args.n_mge)
     combo_kwargs_model = set_model_combo(args.model_combo)
     if args.blind:
         _scoring.BLIND_MODE = True
@@ -469,7 +465,7 @@ def _run_bandit_mode(args, obs, task_label):
     from .outer_loop import (
         run_model_scout, LensAgentLoop, BanditScheduler, _ComboState,
     )
-    from .scoring import set_model_combo, MODEL_COMBOS, build_combo5, build_combo8
+    from .scoring import set_model_combo, MODEL_COMBOS, build_combo3
     import lensagent.scoring as _scoring
     from .llm_client import OpenRouterClient
     from .database import ProposalDatabase
@@ -477,9 +473,9 @@ def _run_bandit_mode(args, obs, task_label):
     from . import outer_loop as _ol
     _ol.PSO_GPU_URL = getattr(args, 'pso_gpu_url', None)
 
-    combo_ids = list(range(6, 14))
+    combo_ids = list(range(1, 9))
     if getattr(args, 'model_v2', False):
-        combo_ids.extend(range(14, 20))
+        combo_ids.extend(range(9, 15))
     scout_top_n = getattr(args, 'scout_top_n', 8)
 
     scout_cache = os.path.join(args.log_dir, "logs", "scout_cache.json")
@@ -541,10 +537,8 @@ def _run_bandit_mode(args, obs, task_label):
 
     combo_states = []
     for combo_id, label, bic in selected:
-        if combo_id == 5:
-            build_combo5(args.n_gaussians)
-        if combo_id == 8:
-            build_combo8(getattr(args, 'n_mge', _scoring.DEFAULT_MGE_COMPONENTS))
+        if combo_id == 3:
+            build_combo3(getattr(args, 'n_mge', _scoring.DEFAULT_MGE_COMPONENTS))
         km = set_model_combo(combo_id)
 
         combo_obs = copy.deepcopy(obs)
@@ -1269,13 +1263,11 @@ def _run_agent_process(combo_id, obs, args, task_label):
     if LENSING_DIR not in sys.path:
         sys.path.insert(0, LENSING_DIR)
 
-    from .scoring import set_model_combo, build_combo5, build_combo8
+    from .scoring import set_model_combo, build_combo3
     import lensagent.scoring as _scoring
     _scoring.NO_LINEAR_SOLVE = getattr(args, 'no_linear_solve', False)
-    if combo_id == 5:
-        build_combo5(args.n_gaussians)
-    if combo_id == 8:
-        build_combo8(getattr(args, 'n_mge', _scoring.DEFAULT_MGE_COMPONENTS))
+    if combo_id == 3:
+        build_combo3(getattr(args, 'n_mge', _scoring.DEFAULT_MGE_COMPONENTS))
     km = set_model_combo(combo_id)
     if args.blind:
         _scoring.BLIND_MODE = True
@@ -1381,7 +1373,7 @@ def _run_scout_mode(args, obs, task_label):
     scout_workers = min(8, max(1, os.cpu_count() or 4))
     ranked = run_model_scout(
         obs,
-        combo_ids=list(range(6, 14)),
+        combo_ids=list(range(1, 9)),
         pso_particles=args.pso_particles,
         pso_iterations=args.pso_iterations,
         pso_runs=args.pso_runs,
