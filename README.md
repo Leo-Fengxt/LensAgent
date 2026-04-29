@@ -1,5 +1,29 @@
 # LensAgent: A Self Evolving Agent for Autonomous Physical Inference of Sub-galactic Structure
 
+<p align="center">
+  <a href="mailto:xiaotang.feng@stcatz.ox.ac.uk">Xiaotang Feng</a><sup>1,2,*,&dagger;</sup> ·
+  <a href="mailto:zihan.wang@queens.ox.ac.uk">Zihan Wang</a><sup>1,*,&dagger;</sup> ·
+  <a href="mailto:zilang.shu@pmb.ox.ac.uk">Zilang Shu</a><sup>1</sup> ·
+  <a href="mailto:jean-paul.kneib@epfl.ch">Jean-Paul Kneib</a><sup>3</sup> ·
+  <a href="mailto:philip.torr@eng.ox.ac.uk">Philip Torr</a><sup>2,&dagger;</sup>
+</p>
+
+<p align="center">
+  <sup>1</sup> Department of Physics, University of Oxford ·
+  <sup>2</sup> Department of Engineering Science, University of Oxford ·
+  <sup>3</sup> Institute of Physics, Laboratory of Astrophysics, EPFL
+</p>
+
+<p align="center">
+  <sup>*</sup> Equal contribution. &nbsp; <sup>&dagger;</sup> Corresponding authors.
+</p>
+
+<p align="center">
+  <a href="https://arxiv.org/abs/2604.03691"><img src="https://img.shields.io/badge/arXiv-2604.03691-b31b1b.svg" alt="arXiv"></a>
+</p>
+
+---
+
 LensAgent is the public code release accompanying our manuscript. It provides a reproducible workflow for autonomous strong gravitational lens modeling, kinematic validation, and sub-galactic dark matter substructure inference.
 
 The project explores how a self-evolving, tool-using large language model can work alongside deterministic physics code to fit strong lens systems, use stellar kinematics to help break the mass-sheet degeneracy, and search residual structure for evidence of dark matter subhalos.
