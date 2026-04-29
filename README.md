@@ -24,6 +24,12 @@
 
 ---
 
+## Abstract
+
+Probing dark matter distribution on sub-galactic scales is essential for testing the Cold Dark Matter ($\Lambda$CDM) paradigm. Strong gravitational lensing, as one of the most powerful approach by far, provides a direct, purely gravitational probe of these substructures. However, extracting cosmological constraints is severely bottlenecked by the mass-sheet degeneracy (MSD) and the unscalable nature of manual and neural-network modeling. Here, we introduce LensAgent, a pioneering training-free, large language model (LLM)-driven agentic framework for the autonomous physical inference of mass distributions. Operating as an autonomous scientific agent, LensAgent couples high-level logical reasoning with deterministic physical modeling tools, demonstarting successful reconstruction of mass distribution in SLACS Grade A strong lensing systems. This self-evolving architecture enables the robust extraction of sub-galactic substructures at scale, unlocking the cosmological potential of upcoming wide-field surveys such as the Rubin Observatory (LSST) and Euclid.
+
+---
+
 LensAgent is the public code release accompanying our manuscript. It provides a reproducible workflow for autonomous strong gravitational lens modeling, kinematic validation, and sub-galactic dark matter substructure inference.
 
 The project explores how a self-evolving, tool-using large language model can work alongside deterministic physics code to fit strong lens systems, use stellar kinematics to help break the mass-sheet degeneracy, and search residual structure for evidence of dark matter subhalos.
