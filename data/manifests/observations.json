@@ -1,0 +1,235 @@
+{
+  "schema": 1,
+  "artifacts": [
+    {
+      "path": "data/observations/multisubhalo_mock/FD1.npz",
+      "sha256": "a43e8d01925312a287fd728288a1ef6a261d94ad5143076719cc80cef8ee8425",
+      "bytes": 220225
+    },
+    {
+      "path": "data/observations/multisubhalo_mock/FD2.npz",
+      "sha256": "802723d88bcada5d410ee3745ed3b16341665a8c7fcdc91285e251994e2aedec",
+      "bytes": 220282
+    },
+    {
+      "path": "data/observations/multisubhalo_mock/FD3.npz",
+      "sha256": "75b263de3e1c8055ad112ad298fbbc584e45c7af31f060de76d18057721694f5",
+      "bytes": 220069
+    },
+    {
+      "path": "data/observations/multisubhalo_mock/FR1.npz",
+      "sha256": "18ae2ef63aad48efba5accbb00d81e4ac97181d224ff7ba63272f63768b20637",
+      "bytes": 220217
+    },
+    {
+      "path": "data/observations/multisubhalo_mock/FR2.npz",
+      "sha256": "757c7b21302e43975ce5a03ba1b781e6a67c4666063a1883dc5e96337216ddcd",
+      "bytes": 220262
+    },
+    {
+      "path": "data/observations/sdss/003753.21-094220.1.npz",
+      "sha256": "62be764155499d68048faeadd6cfbfd596af2ea5d4a151011762d0e4bb1faadc",
+      "bytes": 113700
+    },
+    {
+      "path": "data/observations/sdss/004402.90+011312.6.npz",
+      "sha256": "d6d58e0bdf9319e47355e688d2a86a3618094703e8ae1ca834857bd7cea597d5",
+      "bytes": 117806
+    },
+    {
+      "path": "data/observations/sdss/040535.41-045552.4.npz",
+      "sha256": "06a99c66618f05bfbb7c4d6cd6df0840a14f47f2181b5d4ac12af185eabd0792",
+      "bytes": 113045
+    },
+    {
+      "path": "data/observations/sdss/091205.31+002901.2.npz",
+      "sha256": "b04bb9ad056bc47daca6db18a51f65c2632242c271d7b76324e4e86506ad2d7c",
+      "bytes": 116324
+    },
+    {
+      "path": "data/observations/sdss/094656.68+100652.8.npz",
+      "sha256": "2721d6760c1cf00c58fcd9b127ddbd8ea53763e5be8ce79acbfe38d179615c98",
+      "bytes": 114407
+    },
+    {
+      "path": "data/observations/sdss/095900.96+441639.4.npz",
+      "sha256": "061883e88e9b72054468db496470aaecc1bdbcbd4972fe025986916be9ff5a08",
+      "bytes": 116138
+    },
+    {
+      "path": "data/observations/sdss/102922.94+042001.8.npz",
+      "sha256": "4b92c143f07754f445760021b692d49553f963740bfbddfa0e9a5ce9d7788824",
+      "bytes": 116820
+    },
+    {
+      "path": "data/observations/sdss/110308.21+532228.2.npz",
+      "sha256": "41ec213b93a491fb0fcd083e6895afb3d26c5be1bc9dbd5d033214b75eaa01ee",
+      "bytes": 114373
+    },
+    {
+      "path": "data/observations/sdss/111250.60+082610.4.npz",
+      "sha256": "5f45cf103a91808fafdd35f4fcbf63bd4c0dc7a3b042b4a3974ea3be6ae8c2dc",
+      "bytes": 105101
+    },
+    {
+      "path": "data/observations/sdss/114257.35+100111.8.npz",
+      "sha256": "4169f89b6d792c4fedb8ebbdb226ac6423b1a1795491d92282a499b945d3b982",
+      "bytes": 114063
+    },
+    {
+      "path": "data/observations/sdss/115310.79+461205.3.npz",
+      "sha256": "d21a3b7faddf14a131c397de33aa5914b7bac4bbf17c50537a71ddd3e8fdbcc8",
+      "bytes": 117662
+    },
+    {
+      "path": "data/observations/sdss/120444.07+035806.4.npz",
+      "sha256": "5db9fbc2902241c2d61bf354c9c143c6b6c61915ffb2691e68489dddca4119b3",
+      "bytes": 117427
+    },
+    {
+      "path": "data/observations/sdss/120540.44+491029.4.npz",
+      "sha256": "6abb71205dff96d100b950796407f9b9647bac4ae6e5d2e136bb983027d4918c",
+      "bytes": 119228
+    },
+    {
+      "path": "data/observations/sdss/121826.70+083050.3.npz",
+      "sha256": "308eb748812853afb84daa61276b9ee37db582b76f023cd1db8ef91f5adddeab",
+      "bytes": 114724
+    },
+    {
+      "path": "data/observations/sdss/125028.26+052349.1.npz",
+      "sha256": "b641c28d9b88ec0affa633d025aa891d8cfef56ac0e58f01f41da272729ad999",
+      "bytes": 106027
+    },
+    {
+      "path": "data/observations/sdss/125050.52-013531.7.npz",
+      "sha256": "c352fdac37e7ebcd4d033f5e4c5d27c292cfab5d13164e6f064de439d4931f73",
+      "bytes": 117027
+    },
+    {
+      "path": "data/observations/sdss/145128.19-023936.4.npz",
+      "sha256": "ff05e1e9332e8a68245a64b0ec2b179e11a78410b1a72c155c1b02e908bf49bf",
+      "bytes": 114558
+    },
+    {
+      "path": "data/observations/sdss/153150.07-010545.7.npz",
+      "sha256": "5f22f92df9eb12a9733ccfcdfcdb20f90a6dd98db41750d6f5c2347a249f6921",
+      "bytes": 113587
+    },
+    {
+      "path": "data/observations/sdss/162746.45-005357.6.npz",
+      "sha256": "04a6d4031d88656f2572c4c836570e9ba26e7deb772436ecde173bdbf86f19ee",
+      "bytes": 116998
+    },
+    {
+      "path": "data/observations/sdss/163602.62+470729.6.npz",
+      "sha256": "619248a85fb917a4615091f9772a19afc575f7379d98346a70c1126ca9e12f8d",
+      "bytes": 107579
+    },
+    {
+      "path": "data/observations/sdss/234111.57+000018.7.npz",
+      "sha256": "62f8552ecdafc96f72cf52f9b2c227150b7ed844be6bc86c3b5de7e6e9c9dafa",
+      "bytes": 116449
+    },
+    {
+      "path": "data/observations/single_mock/A1.npz",
+      "sha256": "1aaf0d9994219eceaf44b127edc8f667136cac2b7e00e0068651a2289813a5f0",
+      "bytes": 220512
+    },
+    {
+      "path": "data/observations/single_mock/A2.npz",
+      "sha256": "7897e14b82dd38229085f22b35fa25e5d66beb489ed45dbfff72116662ee3e62",
+      "bytes": 219751
+    },
+    {
+      "path": "data/observations/single_mock/A3.npz",
+      "sha256": "12c32fc7d53d6c01d7b80356d595ea8251e45035ab5e1247a32035e57c86777f",
+      "bytes": 218069
+    },
+    {
+      "path": "data/observations/single_mock/A4.npz",
+      "sha256": "c39957beabf4658f175f464acb3d0c07cb29bbc8b32e03f089dbc5eac88c6dfa",
+      "bytes": 220603
+    },
+    {
+      "path": "data/observations/single_mock/A5.npz",
+      "sha256": "85af8fea316a2336ecb8ca1eb29bf5123d6b4127e1fa8b6bd0087415b52ee932",
+      "bytes": 219664
+    },
+    {
+      "path": "data/observations/single_mock/B1.npz",
+      "sha256": "5523b8f25e5b381324027c147acbf4a5d38896ceaa4e642575ae2f0b3e1a9ddc",
+      "bytes": 219278
+    },
+    {
+      "path": "data/observations/single_mock/B2.npz",
+      "sha256": "a28e8f54f52bb73e4eeae04a96c96da94a95437c49c22cb8bbae7408c750766c",
+      "bytes": 219235
+    },
+    {
+      "path": "data/observations/single_mock/B3.npz",
+      "sha256": "4a8e0e1d17790ac5632d444254078d831d8feb6b4140dcb797f3f70fb103485c",
+      "bytes": 219376
+    },
+    {
+      "path": "data/observations/single_mock/C1.npz",
+      "sha256": "b73137d1cfa09fe896bdf53cc9aec276b6f604f8ed756686866062314bfab1ea",
+      "bytes": 219932
+    },
+    {
+      "path": "data/observations/single_mock/C2.npz",
+      "sha256": "1566e4d3de18c6e5ee7123774e8a072cc12ae9e959c6da408ec2dc815e71dc24",
+      "bytes": 220423
+    },
+    {
+      "path": "data/observations/single_mock/C3.npz",
+      "sha256": "d20b5b26c047c31ab1cfc7d04142fb69990ae61ec5f5013d1e77ca22d736efa7",
+      "bytes": 220811
+    },
+    {
+      "path": "data/observations/single_mock/C4.npz",
+      "sha256": "df1db1d6cbd9694d87c49247117bb7b0dba3d048c5a8e701a1a90047003e1f16",
+      "bytes": 219043
+    },
+    {
+      "path": "data/observations/single_mock/D1.npz",
+      "sha256": "1a09489add560fcd99ca0c2e5b6c68345ba5ca9f51782a3f924c26e12c851647",
+      "bytes": 220166
+    },
+    {
+      "path": "data/observations/single_mock/D2.npz",
+      "sha256": "36673678f77c8a0e663a82b588e606eda319b68ac466f4f9cb414ecd46b80568",
+      "bytes": 219680
+    },
+    {
+      "path": "data/observations/single_mock/D3.npz",
+      "sha256": "d337cce291a018f88b164339dec52af0cd8ccd474dc5f78285a379a47b6bfbbb",
+      "bytes": 220134
+    },
+    {
+      "path": "data/observations/single_mock/D4.npz",
+      "sha256": "08b0e25e5c7cd69628ac4d405102e349b844141fc3f814d3998bbb84d8611faa",
+      "bytes": 219887
+    },
+    {
+      "path": "data/observations/single_mock/D5.npz",
+      "sha256": "79c3428fe40ecea4680ddc7e13fe8ed0168e5802fc1653d99c26f50d8005fee6",
+      "bytes": 220581
+    },
+    {
+      "path": "data/observations/single_mock/D6.npz",
+      "sha256": "8c95e77380668ac072642cd2f11375032d2c5b7aee41651b5efc35a581c5faf9",
+      "bytes": 219257
+    },
+    {
+      "path": "data/observations/single_mock/D7.npz",
+      "sha256": "ca844e6f2dee01f949096cd0cebe60c7e3761385921af63a5bc7a1862b2fd675",
+      "bytes": 220080
+    },
+    {
+      "path": "data/observations/single_mock/D8.npz",
+      "sha256": "6354d4967554ff03e378d6be77f065de5266e3ee03fb5dd2dd446d6a46394c1f",
+      "bytes": 220671
+    }
+  ]
+}

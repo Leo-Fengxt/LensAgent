@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=82", "wheel>=0.47"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lensagent"
+version = "1.0.0"
+description = "Autonomous physical inference for strong gravitational lenses"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = {file = "LICENSE"}
+authors = [
+  {name = "Xiaotang Feng"},
+  {name = "Zihan Wang"},
+  {name = "Zilang Shu"},
+  {name = "Jean-Paul Kneib"},
+  {name = "Philip Torr"},
+]
+dependencies = [
+  "astropy>=8.0,<9",
+  "beautifulsoup4>=4.15,<5",
+  "lenstronomy==1.14.1",
+  "matplotlib>=3.11,<4",
+  "numpy>=2.4,<3",
+  "photutils>=3.0,<4",
+  "pydl>=1.0,<2",
+  "requests>=2.34,<3",
+  "scikit-image>=0.26,<1",
+  "scipy>=1.18,<2",
+  "sdss-access>=3.0,<4",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=9.1,<10",
+]
+
+[project.scripts]
+lensagent = "lensagent.cli:main"
+
+[project.urls]
+Repository = "https://github.com/Leo-Fengxt/LensAgent"
+Paper = "https://arxiv.org/abs/2604.03691"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+license-files = ["LICENSE", "LICENSES/*"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+lensagent = [
+  "resources/configs/*.yaml",
+  "resources/catalogs/*.csv",
+  "resources/manifests/*.json",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra"
+
+[tool.coverage.run]
+source = ["lensagent"]

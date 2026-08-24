@@ -1,0 +1,86 @@
+{
+  "system_id": "B3",
+  "group": "B",
+  "ground_truth_model": "Hernquist+NFW+Shear",
+  "z_lens": 0.17,
+  "z_source": 0.55,
+  "theta_E_arcsec": 0.2133526676333817,
+  "gamma_3D": null,
+  "q_mass": 0.75,
+  "gamma_ext": 0.05,
+  "kappa_ext": 0.0,
+  "lens_model_list": [
+    "HERNQUIST",
+    "NFW",
+    "SHEAR"
+  ],
+  "kwargs_lens": [
+    {
+      "sigma0": 0.16825169655586245,
+      "Rs": 1.38,
+      "center_x": 0,
+      "center_y": 0
+    },
+    {
+      "Rs": 30.468277804955658,
+      "alpha_Rs": 1.6609207415675598,
+      "center_x": 0,
+      "center_y": 0
+    },
+    {
+      "gamma1": -0.008682408883346517,
+      "gamma2": -0.0492403876506104,
+      "ra_0": 0,
+      "dec_0": 0
+    }
+  ],
+  "component_labels": [
+    "main_Hernquist",
+    "main_NFW",
+    "shear"
+  ],
+  "kwargs_source": [
+    {
+      "amp": 352.14239428907825,
+      "R_sersic": 0.3,
+      "n_sersic": 1.0,
+      "e1": 0,
+      "e2": 0,
+      "center_x": -0.14714337097422533,
+      "center_y": -0.1036765565513318
+    }
+  ],
+  "kwargs_lens_light": [
+    {
+      "amp": 316.85601713051733,
+      "Rs": 1.38,
+      "center_x": 0,
+      "center_y": 0
+    }
+  ],
+  "lens_light_model_list": [
+    "HERNQUIST"
+  ],
+  "source_light_model_list": [
+    "SERSIC_ELLIPSE"
+  ],
+  "sigma_v_true_kms": 130.37892953128195,
+  "sigma_v_observed_kms": 128.36192312240786,
+  "sigma_v_error_kms": 7.822735771876917,
+  "sigma_v_noise_delta": -0.015470340308248532,
+  "sigma_v_noise_seed": 846046,
+  "sigma_v_noise_draw_index": 7,
+  "sigma_v_noise_z": -0.25783900513747554,
+  "sigma_v_truth_method": "KinematicsAPI",
+  "f_DM_within_thetaE": 0.55,
+  "stellar_mass_Msun": 70000000000.0,
+  "companion_profile": null,
+  "sigma_comp_kms": null,
+  "comp_separation_theta_E": null,
+  "subhalo_profile": null,
+  "subhalo_mass_Msun": null,
+  "subhalo_R_theta_E": null,
+  "subhalo_position": null,
+  "npix": 120,
+  "deltapix": 0.05
+}

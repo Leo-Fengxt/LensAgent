@@ -1,0 +1,715 @@
+{
+  "schema": 1,
+  "artifacts": [
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FD1/kappa_main_EPL.fits",
+      "sha256": "edeb548b0148c7e85c5e34773e384084baeae35a849e2548c588080b892f11c5",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FD1/kappa_subhalo_NFW_0.fits",
+      "sha256": "9cf3c8b3637cd6a80d0f1fc5bf0cf3d5790ffd1624bb61ade2b5216f2e2355f5",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FD1/kappa_subhalo_NFW_1.fits",
+      "sha256": "b455ca018585c1b2fa95a04a9f75fe97d49b2d12ba2582090876e191c201fac8",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FD1/kappa_subhalo_NFW_2.fits",
+      "sha256": "da19f918846de4b604e75ed56077f98019f2483994ebff8a8ff45af9b489a0a7",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FD1/kappa_total.fits",
+      "sha256": "a94f0fad12e12e1bbf52ec5f20ceaf62959869159c0d0301ce612fd7a8e93c65",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FD1/mass_profile.json",
+      "sha256": "ca35d63a42131b0947da9b4d94f4fa3cdbaa7a9f1d367ba731101a66c9907e8e",
+      "bytes": 458
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FD1/parameters.json",
+      "sha256": "8717e6d44a2c13db8bae845faa954da50ecb628dfb15404b6e1422cf96609366",
+      "bytes": 3467
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FD2/kappa_main_EPL.fits",
+      "sha256": "a84c2ad1c6f92759701ade93d5c65c2b9f14cd831c595a1a008626c2d8de8824",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FD2/kappa_subhalo_NFW_0.fits",
+      "sha256": "33714776f05eacb4e1778e76adc853bea21eca5e17e1aac241c64ea544ceb2a5",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FD2/kappa_subhalo_NFW_1.fits",
+      "sha256": "c88afb18dacd1ce50e68ce2ee9b156bc114d035694c2cb960f1f5ef730f4218a",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FD2/kappa_subhalo_NFW_2.fits",
+      "sha256": "680846255c273d5df08ef1e06e269f1bf213f60c3eaabd7daaaff8b43e76d66a",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FD2/kappa_subhalo_NFW_3.fits",
+      "sha256": "5f28d1c14ee34f9f5b6309169573c635d0338118f95a422060b9d778d06e8b32",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FD2/kappa_total.fits",
+      "sha256": "9fd88a7ab432241b311f15a4932e03e7883d389b109d2929784fee8ccf8b5c68",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FD2/mass_profile.json",
+      "sha256": "107ca034bc1970dd267676dea41aadf790fd405e3e38af39e152c0042dc1641a",
+      "bytes": 460
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FD2/parameters.json",
+      "sha256": "817269120e946807ffccf6369d44f2bf459b143b13ddc207e90d6de91930ab0e",
+      "bytes": 3979
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FD3/kappa_main_EPL.fits",
+      "sha256": "de46a98e660826387af0041002b6078741736fb2d43a3d6351e4966e4baed004",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FD3/kappa_subhalo_NFW_0.fits",
+      "sha256": "601001874071ab791e0d4a6f9866f304ee8d31551229cdb319f7f071b9d371f5",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FD3/kappa_subhalo_NFW_1.fits",
+      "sha256": "a5a47a0355423bb1914cc83d27db9c4d7283e1163e62ebbebf4f8a27ec01c90a",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FD3/kappa_total.fits",
+      "sha256": "428b92510258eedd9aa49bd11255d954df5071b3eee4c2766d72763c743900f7",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FD3/mass_profile.json",
+      "sha256": "c6e156a0b18645c49cf740cf4a781a7ae8b2da3dd752a6e0772bae2498ac3656",
+      "bytes": 452
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FD3/parameters.json",
+      "sha256": "4a2831f147e2be411155eb2085f5e1aa5cf6d8798936760fb4461d9a069108d3",
+      "bytes": 2954
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR1/kappa_main_EPL.fits",
+      "sha256": "edeb548b0148c7e85c5e34773e384084baeae35a849e2548c588080b892f11c5",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR1/kappa_subhalo_NFW_0.fits",
+      "sha256": "0d67e23f94bc4bb29eae2fca6de41fbbe719978bdb6be24048bc7684927a236f",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR1/kappa_subhalo_NFW_1.fits",
+      "sha256": "ca419f3df672a401e7d467d3c5a40397db42e2c18af847305c179a3c1f426b80",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR1/kappa_subhalo_NFW_2.fits",
+      "sha256": "12d4b13a6fe003b1fab28ee31432e13cb728ccf7a0baffd7c4d5e2677873c0df",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR1/kappa_subhalo_NFW_3.fits",
+      "sha256": "c3ef455ea500b6de516c7d15ec5042bb6c0403e83d366d14919019d812ea2b8d",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR1/kappa_subhalo_NFW_4.fits",
+      "sha256": "ddae02c1fb3eef7cbb9892e96362338884682ab7d593a86e08943a2dae8d090e",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR1/kappa_subhalo_NFW_5.fits",
+      "sha256": "f762b92ceae65c47ce1f715a1798ae2603f2a2b4d99396d9837c1ffa43993a7c",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR1/kappa_subhalo_NFW_6.fits",
+      "sha256": "9aea0fb366e223c342b09ac4df49d10eb3261843a5801bf97936958984970869",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR1/kappa_subhalo_NFW_7.fits",
+      "sha256": "6001c46ee86fb571a00db4ec4574506738d1274b4d776993dc33c1ef1fbfed1c",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR1/kappa_total.fits",
+      "sha256": "d0d10f868f8f9a9fcc13082203a406b18e0f38fd215bb6f84f8ea838318287e0",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR1/mass_profile.json",
+      "sha256": "e1681ee44227a3bf327f3cf71e8734bd22d1db286d32ed383d623adfbaf80efd",
+      "bytes": 456
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR1/parameters.json",
+      "sha256": "c817122810f77b040909a77d710bf883a6e63e2c8c062ad29675f563bfa604aa",
+      "bytes": 6320
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR2/kappa_main_EPL.fits",
+      "sha256": "a84c2ad1c6f92759701ade93d5c65c2b9f14cd831c595a1a008626c2d8de8824",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR2/kappa_subhalo_NFW_0.fits",
+      "sha256": "35bf83b2f7137fb39854b9cd0bf3ad50a74c1dd2af45c33257b4b8266e678eae",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR2/kappa_subhalo_NFW_1.fits",
+      "sha256": "2b89151939bd454b680f71d69e715de50910f674f1fce40c66fcb2146b2d2ab0",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR2/kappa_subhalo_NFW_2.fits",
+      "sha256": "65ff95154d6c5ac2025c1d972c929dcdc60f1f3ab35df8512c3e9f094d006f4b",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR2/kappa_subhalo_NFW_3.fits",
+      "sha256": "b32c93fed4639da13dd50df0106a0cf02400c2ce7a03192f99cdad3e0a754400",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR2/kappa_subhalo_NFW_4.fits",
+      "sha256": "6a1f20bd9088cbad0dca5bcd982f1c1e35b9bfd119ef410f03bda5d3f139e19e",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR2/kappa_subhalo_NFW_5.fits",
+      "sha256": "19255607605d90dfe6a6f250034619e9102f51d92b3c3ad5c8a86771d8b280fa",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR2/kappa_subhalo_NFW_6.fits",
+      "sha256": "da31d9c3b7521b09c0c04f84d3ed09756b9f5c2235377fc7780716fabe72d3b4",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR2/kappa_subhalo_NFW_7.fits",
+      "sha256": "618dc176e98f0cfde0813e3e45e99dfa19132eb01ab2c4ef95654175479a8f61",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR2/kappa_subhalo_NFW_8.fits",
+      "sha256": "9a89cd2abab4adb3a2f76935628bafc649542b7939b7ffa9afb79d8f896e3792",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR2/kappa_subhalo_NFW_9.fits",
+      "sha256": "c161e73d577c91da6e500e1eb55f6cecde7770d6f3caa766fe55821e1c46c862",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR2/kappa_total.fits",
+      "sha256": "0ab8db61f116c8439469f53114044c61897b198c42dd080b5f66b7f7f371b6ec",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR2/mass_profile.json",
+      "sha256": "cef2429ef82fc015094cf07637c30b0b5a854d5c582590c4df29f5f4534a9d7f",
+      "bytes": 459
+    },
+    {
+      "path": "data/benchmarks/multisubhalo_mock/FR2/parameters.json",
+      "sha256": "29ca83805b0784aed23f55355f28381c51db192a46e0d403683169f930efa3e9",
+      "bytes": 7450
+    },
+    {
+      "path": "data/benchmarks/single_mock/A1/kappa_main_EPL.fits",
+      "sha256": "ae16a721ea28a367fabc1bceab0e5f136159808ef2e272ffbc0334f7751a09c5",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/A1/kappa_total.fits",
+      "sha256": "ae16a721ea28a367fabc1bceab0e5f136159808ef2e272ffbc0334f7751a09c5",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/A1/mass_profile.json",
+      "sha256": "fef392fe97c497f2331a8d79fbb85c395c76dd1fdd85bd5d104f927325ce2035",
+      "bytes": 452
+    },
+    {
+      "path": "data/benchmarks/single_mock/A1/parameters.json",
+      "sha256": "ad3fff3269997481187b616dd71ea4624c2180d3b82bf44e2075cb74be5377dd",
+      "bytes": 2044
+    },
+    {
+      "path": "data/benchmarks/single_mock/A2/kappa_main_EPL.fits",
+      "sha256": "14679fb76cb7be4287217877eb5165938427d7ccb6cf4de5f8948ffee785e53b",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/A2/kappa_total.fits",
+      "sha256": "14679fb76cb7be4287217877eb5165938427d7ccb6cf4de5f8948ffee785e53b",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/A2/mass_profile.json",
+      "sha256": "52aef8244c1800fc4105fafcfca52689b76058715c0ec7701fbca4a992f372c4",
+      "bytes": 456
+    },
+    {
+      "path": "data/benchmarks/single_mock/A2/parameters.json",
+      "sha256": "53957fc16330ac2f4d012e27820da27189134cc3ce71e299331bf158a26ae87e",
+      "bytes": 2046
+    },
+    {
+      "path": "data/benchmarks/single_mock/A3/kappa_main_EPL.fits",
+      "sha256": "fba8d348766be97191253a71ce48bac5900891da96a014ab6fa22f0a87580ff3",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/A3/kappa_total.fits",
+      "sha256": "fba8d348766be97191253a71ce48bac5900891da96a014ab6fa22f0a87580ff3",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/A3/mass_profile.json",
+      "sha256": "0ee0b8da942948fbb4eb218123b6434b51a34c89a302fdb01da28bd280bcf731",
+      "bytes": 414
+    },
+    {
+      "path": "data/benchmarks/single_mock/A3/parameters.json",
+      "sha256": "efc8c186d62f51eb50608dffbb7c04b62d27869bcfd668e4900a3ff461d2e743",
+      "bytes": 2029
+    },
+    {
+      "path": "data/benchmarks/single_mock/A4/kappa_main_EPL.fits",
+      "sha256": "81fbe4302c4a17b9173251e7c27192be018b8fee7bea46e06edae27ef05faab6",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/A4/kappa_total.fits",
+      "sha256": "81fbe4302c4a17b9173251e7c27192be018b8fee7bea46e06edae27ef05faab6",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/A4/mass_profile.json",
+      "sha256": "fcfe6bf9e04e38e6feb731faf0cb0540f895cab3062ddf67039f6a2c6712854c",
+      "bytes": 451
+    },
+    {
+      "path": "data/benchmarks/single_mock/A4/parameters.json",
+      "sha256": "feafd3aeca9be7a39ff33b37b904f5e29bc8dbe86647e338c976b3b859a26946",
+      "bytes": 2042
+    },
+    {
+      "path": "data/benchmarks/single_mock/A5/kappa_main_EPL.fits",
+      "sha256": "95526a95f73bf363af455eeae3fba256bcd8e901b4c83e2ad61d6c2f5ed56988",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/A5/kappa_total.fits",
+      "sha256": "95526a95f73bf363af455eeae3fba256bcd8e901b4c83e2ad61d6c2f5ed56988",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/A5/mass_profile.json",
+      "sha256": "7cc28e0e87cc810b9ffdceaf142e7b38679592732e8edb6034b3efde77620703",
+      "bytes": 456
+    },
+    {
+      "path": "data/benchmarks/single_mock/A5/parameters.json",
+      "sha256": "e60c72d0559eb80cbf3f7b8d8970cc00d60851b1d4fd24836e5a93ab619edf6c",
+      "bytes": 2035
+    },
+    {
+      "path": "data/benchmarks/single_mock/B1/kappa_main_Hernquist.fits",
+      "sha256": "527735b55746bc186676e0b6a56b2a62294acd987864f77ef549ffe0cc7df2ff",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/B1/kappa_main_NFW.fits",
+      "sha256": "35b74bf02c6d43360c646c46a14e44662308ccc4fc9adddc97a555e47af9bf5a",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/B1/kappa_total.fits",
+      "sha256": "9964c5c521860981af268be2ddd512e53caeedfec41fffd95c5824d241dae4cf",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/B1/mass_profile.json",
+      "sha256": "ec2797e0987ff47643de7f415daa21b8efb2fa8955bf2bcf32d6337565167a58",
+      "bytes": 530
+    },
+    {
+      "path": "data/benchmarks/single_mock/B1/parameters.json",
+      "sha256": "2ac7d32c253bdfbc21af291269a772c0f4d0940fd30213cf347892955b0ca9ab",
+      "bytes": 1867
+    },
+    {
+      "path": "data/benchmarks/single_mock/B2/kappa_main_Hernquist.fits",
+      "sha256": "ac4182a8056afa2e706f5bb4b636e7bf040f7e9fd27cdb98acc3d27c6dd75ea2",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/B2/kappa_main_NFW.fits",
+      "sha256": "4418c2fc99a15514fb0dc0192668f720191594e1ee42df47bd5e353725dd9f1d",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/B2/kappa_total.fits",
+      "sha256": "86f395b87eefdea671645d2016852a18624eef9452ee6a8286b1ffb0972ccb64",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/B2/mass_profile.json",
+      "sha256": "5448b58c7129bd7c56cb0e39c36ea5481b9c67e7a479ba662c270797c3b6d1b2",
+      "bytes": 528
+    },
+    {
+      "path": "data/benchmarks/single_mock/B2/parameters.json",
+      "sha256": "dfd070c50fcaf23ff6fc17886a3cd5d98f31d5235bb8c7c3e0f080a47d7e018a",
+      "bytes": 1868
+    },
+    {
+      "path": "data/benchmarks/single_mock/B3/kappa_main_Hernquist.fits",
+      "sha256": "44c8a20a1d5e74f1fc084f9ee3a9daa5ee7023aad961e6e90aa538afe9ac1586",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/B3/kappa_main_NFW.fits",
+      "sha256": "e38a9a80c2666ee5dcad6f495e0c4b387b2e802c0eca6099df6b3bdb15cfe7e3",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/B3/kappa_total.fits",
+      "sha256": "689210baa9a156a97091ac526cedbb02919c9d4eaba11f4517c8f6fe0a8fc347",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/B3/mass_profile.json",
+      "sha256": "a296aab814e78e680ded63f9da801e1383941cb2e087752e93c11a3b0f261f20",
+      "bytes": 532
+    },
+    {
+      "path": "data/benchmarks/single_mock/B3/parameters.json",
+      "sha256": "e3e9daf7fdb5324a11bd9ff82baf10d5654a24c2c9435a70f8dbb3a9f8589ccf",
+      "bytes": 1871
+    },
+    {
+      "path": "data/benchmarks/single_mock/C1/kappa_main_EPL.fits",
+      "sha256": "e3a2215614e18d98c3bb9f26f4d28acff1e273a953bba2ff26b5a1429646d07a",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/C1/kappa_total.fits",
+      "sha256": "199765e2d1bc87e66d100d46682f6c13492c3095c99d2bd6bc9a32116654fa37",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/C1/mass_profile.json",
+      "sha256": "79706b396a69cb7902ec952d5b4f9c488a81340775ca11537645e39045f3fd00",
+      "bytes": 453
+    },
+    {
+      "path": "data/benchmarks/single_mock/C1/parameters.json",
+      "sha256": "fcfac3eeb0bd3a54b7c34b40e5908acd7e8cd2400069c6882283436426251922",
+      "bytes": 2153
+    },
+    {
+      "path": "data/benchmarks/single_mock/C2/kappa_main_EPL.fits",
+      "sha256": "6868e331bfaeb6075550cec0f3761a8edf627aa64d95fb77aba73cd1d014b02e",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/C2/kappa_total.fits",
+      "sha256": "ea353b0c4b5ebf7e3225c5aa2188016dacb7f673f2356282c55bea15ae49c110",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/C2/mass_profile.json",
+      "sha256": "6c9c5fe6042962407b85171d2090e504be502b674b05e7c5fe4723652c0e7005",
+      "bytes": 456
+    },
+    {
+      "path": "data/benchmarks/single_mock/C2/parameters.json",
+      "sha256": "96b502f74265dcb5a867ba4d3c5be6f4cd8db884f0d88a74cd8e2a66fefb5d75",
+      "bytes": 2167
+    },
+    {
+      "path": "data/benchmarks/single_mock/C3/kappa_main_EPL.fits",
+      "sha256": "f913d3cd63e388ba0839440ead658b3d96ad69ae8cb876b3f2d87ba86ef9e852",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/C3/kappa_total.fits",
+      "sha256": "70bededa766843aefb9a2b44539b46e4089a305aac47c5e4607a2ee3db79ef6c",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/C3/mass_profile.json",
+      "sha256": "a5ac5ee53de53765881b9ca13b4e2944d518daa210443bee97ae6e409d02536c",
+      "bytes": 410
+    },
+    {
+      "path": "data/benchmarks/single_mock/C3/parameters.json",
+      "sha256": "664bf533381835187a8d2b8b3efcdc7eb139d49735a9cff702efc1c0c5473dc8",
+      "bytes": 2165
+    },
+    {
+      "path": "data/benchmarks/single_mock/C4/kappa_main_EPL.fits",
+      "sha256": "790ae47d664a7d930e1afd8c6e97a87ac63656e07d80ce389b761c37308c89fe",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/C4/kappa_total.fits",
+      "sha256": "790ae47d664a7d930e1afd8c6e97a87ac63656e07d80ce389b761c37308c89fe",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/C4/mass_profile.json",
+      "sha256": "8f628523adc4d6957f9be3bf54becec49753a7f7b1a2aa5f8c0144ed6dae9e1e",
+      "bytes": 454
+    },
+    {
+      "path": "data/benchmarks/single_mock/C4/parameters.json",
+      "sha256": "70f7719c7db4ee2e9568ed376ba77acfc65201036ae8f4f6598c1625795990e4",
+      "bytes": 2044
+    },
+    {
+      "path": "data/benchmarks/single_mock/D1/kappa_main_EPL.fits",
+      "sha256": "edeb548b0148c7e85c5e34773e384084baeae35a849e2548c588080b892f11c5",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D1/kappa_subhalo_NFW.fits",
+      "sha256": "be03790127f2ab240533d0534e858d454030c8a9d0e91bccd3747d1cd2e7c1bb",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D1/kappa_total.fits",
+      "sha256": "00685cfc75b6543cee67cbcb6a06d32650638fe03991aa48f96236050ace3cfc",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D1/mass_profile.json",
+      "sha256": "86a462579a20ba3e4ee29074b50ad9d1506bdf76ad116621c090b39b899f1cea",
+      "bytes": 457
+    },
+    {
+      "path": "data/benchmarks/single_mock/D1/parameters.json",
+      "sha256": "8c32a850259e6137d71b3df12055cb468e116f6f36479e7f23c873c6bc0957e5",
+      "bytes": 2239
+    },
+    {
+      "path": "data/benchmarks/single_mock/D2/kappa_main_EPL.fits",
+      "sha256": "ad1e731bf9b7414d0c831e3ae49ed050540a7efdd7c3037677f62437c059ea57",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D2/kappa_subhalo_NFW.fits",
+      "sha256": "434c143e5353bfc811b6983ae22e04fbbf3626ad18e25711827089a5853869b4",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D2/kappa_total.fits",
+      "sha256": "12649305a24a84648efbbea82ab9e28b227c632cdd55b17a06773d6d149abd51",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D2/mass_profile.json",
+      "sha256": "8460f3e5e4f2c6a58324541ab77a7aad3de4255477b0c0a9600e4b76910cd9b0",
+      "bytes": 458
+    },
+    {
+      "path": "data/benchmarks/single_mock/D2/parameters.json",
+      "sha256": "96a7b486c918b45fe665d58473290429a32ce11a8ec32d16aa9d0df10db507de",
+      "bytes": 2263
+    },
+    {
+      "path": "data/benchmarks/single_mock/D3/kappa_main_EPL.fits",
+      "sha256": "58854e89ce26a19c3b6cd45c532b5c70e47d0b979ef9a5deb82eff93b4c987e3",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D3/kappa_subhalo_NFW.fits",
+      "sha256": "fd9732cd32d6d82e3261b13ef4a4fb30e138cfee673b8998eb039b0812b47e0a",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D3/kappa_total.fits",
+      "sha256": "8ac97bae3fb4c76146c1639741f281fc79ae23831d10eb794ea899df4179494a",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D3/mass_profile.json",
+      "sha256": "7987393b56358e4e012abe3bcb18e054fb88fb683eb335ad2c21d1b655f5e4bd",
+      "bytes": 423
+    },
+    {
+      "path": "data/benchmarks/single_mock/D3/parameters.json",
+      "sha256": "34cccec9f7ab61383f52b89846d2aeee7b0ab1790ef988383c18d7d752ce7005",
+      "bytes": 2257
+    },
+    {
+      "path": "data/benchmarks/single_mock/D4/kappa_main_EPL.fits",
+      "sha256": "b5eab42bb92750e188b18fc709925c215056a698a252b2258cfe16cc3021a34b",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D4/kappa_subhalo_NFW.fits",
+      "sha256": "f3c8775a5cd05211ed2de564a4ccc8f1ec0cd9d3493a88686a26ca820855f040",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D4/kappa_total.fits",
+      "sha256": "2fd9da1226d8998796fd215542932657c93a1582f01597eb875faa2b4e84340f",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D4/mass_profile.json",
+      "sha256": "bb4c9eb261cf84db0d80ee0125fd66b5fa1ec0c04097b9f93757ed4537711520",
+      "bytes": 453
+    },
+    {
+      "path": "data/benchmarks/single_mock/D4/parameters.json",
+      "sha256": "6f8b999e84216712feea3be9f1dc1148a0e41476be2a2c6dc34e0db9c47f3b83",
+      "bytes": 2249
+    },
+    {
+      "path": "data/benchmarks/single_mock/D5/kappa_companion_SIS.fits",
+      "sha256": "626b775706762a52543eb331e4599aae54d351f91043fbabbdec2b019161e9cd",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D5/kappa_main_EPL.fits",
+      "sha256": "79186e9c698427db9d4acd2383de8f10b78ebc7c322f44e7a4a9cf0331b603a7",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D5/kappa_subhalo_NFW.fits",
+      "sha256": "2e0a6f97de30e640fcb2174da0496624178004522924f5c636c8167f840546ae",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D5/kappa_total.fits",
+      "sha256": "a838693dbf9dd125cb864e7f007bce770c27656e3d7b34101df4f999cbc2ec50",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D5/mass_profile.json",
+      "sha256": "439cb5cd02db777395046eac3911427f83e455a2c67fe83977da6d7b15cdca78",
+      "bytes": 456
+    },
+    {
+      "path": "data/benchmarks/single_mock/D5/parameters.json",
+      "sha256": "22f7ffaa12c6725ae0c7b0b89be657d2a3583945364eb577f22ee13db59f67c8",
+      "bytes": 2647
+    },
+    {
+      "path": "data/benchmarks/single_mock/D6/kappa_companion_SIS.fits",
+      "sha256": "4593428621af1e3a0e4b55ab487e2c8e02484997540351c3efe37558b7aa96b1",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D6/kappa_main_EPL.fits",
+      "sha256": "692146bbc774006fa75eb61363db218c65a3b7c01f5f6175be25570c8cf8407f",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D6/kappa_subhalo_NFW.fits",
+      "sha256": "4a0fb24f4aeb5b55dbb9063cf058de4eb5fe2873249db49b298cdf84c6ffe70f",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D6/kappa_total.fits",
+      "sha256": "da75d7f48d08bbae54d7b89ceab5e8e75c8af613bd9e2e4562df415a51c147af",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D6/mass_profile.json",
+      "sha256": "f2f227f318e8dab8e46c72d7a312105522341e44988416a79e7d3eba4729bd81",
+      "bytes": 454
+    },
+    {
+      "path": "data/benchmarks/single_mock/D6/parameters.json",
+      "sha256": "59974ee97231187300e32e79e11e65b9bd6bea771cb036d10c0254aebf88d4b4",
+      "bytes": 2416
+    },
+    {
+      "path": "data/benchmarks/single_mock/D7/kappa_companion_SIS.fits",
+      "sha256": "512fe1e26b674a74e65d7a702bbe105a6cd062e3e062f62698c81ec316c7bee7",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D7/kappa_main_EPL.fits",
+      "sha256": "e185ed3f01a00ab8b6ae2b634752d3e4fd010c72f3f2eab67660f481b3f19c3f",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D7/kappa_subhalo_NFW.fits",
+      "sha256": "4cb7dfafd8b378432721724d5b198c8a78f6b81cf8228b05aab941ac7e8bb146",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D7/kappa_total.fits",
+      "sha256": "0cb9a0aadb920fc441c825e53e51c2e439f504e220e7dafe2be3e20bdf320dfb",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D7/mass_profile.json",
+      "sha256": "fa8d9b3b9bbb313235e3815272811dae53e83b416412e16679fc6beefb390d22",
+      "bytes": 455
+    },
+    {
+      "path": "data/benchmarks/single_mock/D7/parameters.json",
+      "sha256": "a423854bf5f3d79c3b9f6178658c002f6e1e8d12e746228eee553856a462cb48",
+      "bytes": 2645
+    },
+    {
+      "path": "data/benchmarks/single_mock/D8/kappa_companion_SIS.fits",
+      "sha256": "41e5fe5d1a15b025c5d043d9fb8aad6b388b826f56e48f44b84ea0ffa450294f",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D8/kappa_main_EPL.fits",
+      "sha256": "7d21f69b7e7e333cbef4c30ab58f4f002a199360d71fdebd602f1afcaef664e5",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D8/kappa_subhalo_NFW.fits",
+      "sha256": "c57f00503ce6e729f1025479424e38f5e1cf6983231d6bf3d7bb21c9be94f04f",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D8/kappa_total.fits",
+      "sha256": "48b9481d43182adeeb900213eb49151c03d7a4ec93b4abe13fbb4f3e344e7461",
+      "bytes": 60480
+    },
+    {
+      "path": "data/benchmarks/single_mock/D8/mass_profile.json",
+      "sha256": "b95224ea0f308817b7c7ff56707c6f2fe3839ed4084021d5a801710b12993956",
+      "bytes": 455
+    },
+    {
+      "path": "data/benchmarks/single_mock/D8/parameters.json",
+      "sha256": "d6964523df8d3d4c3cd2e9d45a8681816282fe7542197307357edc49cf61c732",
+      "bytes": 2411
+    }
+  ]
+}

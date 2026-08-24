@@ -1,0 +1,6 @@
+system_id,dataset,z_lens,z_source,sigma_obs,sigma_obs_err,ra_deg,dec_deg,observation,subhalo_count
+FD1,multisubhalo_mock,0.2,0.65,262.25753528944557,15.755936048792314,0.0,0.0,data/observations/multisubhalo_mock/FD1.npz,3
+FD2,multisubhalo_mock,0.2,0.65,239.57489586372594,16.056076085548636,0.0,0.0,data/observations/multisubhalo_mock/FD2.npz,4
+FD3,multisubhalo_mock,0.2,0.65,251.4190101293825,15.137813705784795,0.0,0.0,data/observations/multisubhalo_mock/FD3.npz,2
+FR1,multisubhalo_mock,0.2,0.65,264.7399343555298,15.755936048792314,0.0,0.0,data/observations/multisubhalo_mock/FR1.npz,8
+FR2,multisubhalo_mock,0.2,0.65,277.14992233198154,16.056076085548636,0.0,0.0,data/observations/multisubhalo_mock/FR2.npz,10

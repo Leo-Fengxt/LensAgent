@@ -1,0 +1,280 @@
+{
+  "system_id": "FR2",
+  "group": "F",
+  "ground_truth_model": "EPL+Shear+NFW_sub",
+  "z_lens": 0.2,
+  "z_source": 0.65,
+  "theta_E_arcsec": 1.35,
+  "gamma_3D": 2.0,
+  "q_mass": 0.8,
+  "gamma_ext": 0.04,
+  "kappa_ext": 0.0,
+  "lens_model_list": [
+    "EPL",
+    "SHEAR",
+    "NFW",
+    "NFW",
+    "NFW",
+    "NFW",
+    "NFW",
+    "NFW",
+    "NFW",
+    "NFW",
+    "NFW",
+    "NFW"
+  ],
+  "kwargs_lens": [
+    {
+      "theta_E": 1.35,
+      "gamma": 2.0,
+      "e1": 6.803593328596405e-18,
+      "e2": 0.11111111111111108,
+      "center_x": 0,
+      "center_y": 0
+    },
+    {
+      "gamma1": -0.04,
+      "gamma2": 4.898587196589413e-18,
+      "ra_0": 0,
+      "dec_0": 0
+    },
+    {
+      "Rs": 0.10197349842378171,
+      "alpha_Rs": 0.001027712169181792,
+      "center_x": 0.06711569239910505,
+      "center_y": -0.2490308881629733
+    },
+    {
+      "Rs": 0.05488551275424672,
+      "alpha_Rs": 0.0028730455580273824,
+      "center_x": 2.203241809496983,
+      "center_y": 1.982915206240276
+    },
+    {
+      "Rs": 0.07802538124868606,
+      "alpha_Rs": 0.001294133281305894,
+      "center_x": 0.04306284215673798,
+      "center_y": 0.025408495142055745
+    },
+    {
+      "Rs": 0.07513975236976221,
+      "alpha_Rs": 0.004661643020520253,
+      "center_x": -0.4473067231576588,
+      "center_y": -2.149652469398127
+    },
+    {
+      "Rs": 0.09401990400595997,
+      "alpha_Rs": 0.0028141308264042282,
+      "center_x": 1.4250723093515305,
+      "center_y": 2.017621854908588
+    },
+    {
+      "Rs": 0.04949092646798673,
+      "alpha_Rs": 0.0027268032771381057,
+      "center_x": -0.08557937417978739,
+      "center_y": 0.8306959320689772
+    },
+    {
+      "Rs": 0.08234230207095568,
+      "alpha_Rs": 0.0020065310129528694,
+      "center_x": -0.5903644498847763,
+      "center_y": 0.5740543892584167
+    },
+    {
+      "Rs": 0.06197423639557329,
+      "alpha_Rs": 0.005831193026883251,
+      "center_x": -0.3242848937002578,
+      "center_y": 0.7677522800218567
+    },
+    {
+      "Rs": 0.20149701435512515,
+      "alpha_Rs": 0.008982281272461317,
+      "center_x": -1.6046279380222483,
+      "center_y": -0.6052908573274535
+    },
+    {
+      "Rs": 0.07902181848994985,
+      "alpha_Rs": 0.0023578351829935417,
+      "center_x": -0.2233277152229321,
+      "center_y": -0.38206273762350995
+    }
+  ],
+  "component_labels": [
+    "main_EPL",
+    "shear",
+    "subhalo_NFW_0",
+    "subhalo_NFW_1",
+    "subhalo_NFW_2",
+    "subhalo_NFW_3",
+    "subhalo_NFW_4",
+    "subhalo_NFW_5",
+    "subhalo_NFW_6",
+    "subhalo_NFW_7",
+    "subhalo_NFW_8",
+    "subhalo_NFW_9"
+  ],
+  "kwargs_source": [
+    {
+      "amp": 276.3425047675583,
+      "R_sersic": 0.22,
+      "n_sersic": 2.0,
+      "e1": 0,
+      "e2": 0,
+      "center_x": 0.09744085563850176,
+      "center_y": 0.07003770165015882
+    }
+  ],
+  "kwargs_lens_light": [
+    {
+      "amp": 24.0965922580397,
+      "R_sersic": 0.5,
+      "n_sersic": 2.5,
+      "e1": 6.0559457100693315e-18,
+      "e2": 0.09890109890109894,
+      "center_x": 0,
+      "center_y": 0
+    },
+    {
+      "amp": 22.861874951260546,
+      "R_sersic": 2.0,
+      "n_sersic": 4.0,
+      "e1": 6.0559457100693315e-18,
+      "e2": 0.09890109890109894,
+      "center_x": 0,
+      "center_y": 0
+    }
+  ],
+  "lens_light_model_list": [
+    "SERSIC_ELLIPSE",
+    "SERSIC_ELLIPSE"
+  ],
+  "source_light_model_list": [
+    "SERSIC_ELLIPSE"
+  ],
+  "sigma_v_true_kms": 267.60126809247726,
+  "sigma_v_observed_kms": 277.14992233198154,
+  "sigma_v_error_kms": 16.056076085548636,
+  "f_DM_within_thetaE": null,
+  "stellar_mass_Msun": null,
+  "companion_profile": null,
+  "sigma_comp_kms": null,
+  "comp_separation_theta_E": null,
+  "subhalo_profile": "NFW",
+  "subhalo_mass_Msun": null,
+  "subhalo_R_theta_E": null,
+  "subhalo_position": null,
+  "subhalo_population": [
+    {
+      "label": "subhalo_NFW_0",
+      "mass_Msun": 103257401.3219831,
+      "concentration": 26.928340095566632,
+      "center_x": 0.06711569239910505,
+      "center_y": -0.2490308881629733,
+      "r_arcsec": 0.2579164582291146,
+      "r_over_thetaE": 0.19104922831786264,
+      "Rs_arcsec": 0.10197349842378171,
+      "alpha_Rs": 0.001027712169181792
+    },
+    {
+      "label": "subhalo_NFW_1",
+      "mass_Msun": 208775911.9742227,
+      "concentration": 63.264329504938296,
+      "center_x": 2.203241809496983,
+      "center_y": 1.982915206240276,
+      "r_arcsec": 2.9641570785392695,
+      "r_over_thetaE": 2.1956719100290885,
+      "Rs_arcsec": 0.05488551275424672,
+      "alpha_Rs": 0.0028730455580273824
+    },
+    {
+      "label": "subhalo_NFW_2",
+      "mass_Msun": 111009046.90903269,
+      "concentration": 36.052888400258226,
+      "center_x": 0.04306284215673798,
+      "center_y": 0.025408495142055745,
+      "r_arcsec": 0.05,
+      "r_over_thetaE": 0.037037037037037035,
+      "Rs_arcsec": 0.07802538124868606,
+      "alpha_Rs": 0.001294133281305894
+    },
+    {
+      "label": "subhalo_NFW_3",
+      "mass_Msun": 456189872.14434373,
+      "concentration": 59.96556904312912,
+      "center_x": -0.4473067231576588,
+      "center_y": -2.149652469398127,
+      "r_arcsec": 2.195697848924462,
+      "r_over_thetaE": 1.6264428510551567,
+      "Rs_arcsec": 0.07513975236976221,
+      "alpha_Rs": 0.004661643020520253
+    },
+    {
+      "label": "subhalo_NFW_4",
+      "mass_Msun": 306843384.5842692,
+      "concentration": 41.989653455324344,
+      "center_x": 1.4250723093515305,
+      "center_y": 2.017621854908588,
+      "r_arcsec": 2.4701475737868934,
+      "r_over_thetaE": 1.8297389435458469,
+      "Rs_arcsec": 0.09401990400595997,
+      "alpha_Rs": 0.0028141308264042282
+    },
+    {
+      "label": "subhalo_NFW_5",
+      "mass_Msun": 181799731.35333428,
+      "concentration": 66.998025043167,
+      "center_x": -0.08557937417978739,
+      "center_y": 0.8306959320689772,
+      "r_arcsec": 0.8350925462731367,
+      "r_over_thetaE": 0.6185870713134345,
+      "Rs_arcsec": 0.04949092646798673,
+      "alpha_Rs": 0.0027268032771381057
+    },
+    {
+      "label": "subhalo_NFW_6",
+      "mass_Msun": 189807996.2676356,
+      "concentration": 40.85121732584082,
+      "center_x": -0.5903644498847763,
+      "center_y": 0.5740543892584167,
+      "r_arcsec": 0.8234492246123062,
+      "r_over_thetaE": 0.6099623886017083,
+      "Rs_arcsec": 0.08234230207095568,
+      "alpha_Rs": 0.0020065310129528694
+    },
+    {
+      "label": "subhalo_NFW_7",
+      "mass_Msun": 503626484.580513,
+      "concentration": 75.14178509824325,
+      "center_x": -0.3242848937002578,
+      "center_y": 0.7677522800218567,
+      "r_arcsec": 0.8334292146073037,
+      "r_over_thetaE": 0.6173549737831878,
+      "Rs_arcsec": 0.06197423639557329,
+      "alpha_Rs": 0.005831193026883251
+    },
+    {
+      "label": "subhalo_NFW_8",
+      "mass_Msun": 2000542589.3746495,
+      "concentration": 36.601916339379734,
+      "center_x": -1.6046279380222483,
+      "center_y": -0.6052908573274535,
+      "r_arcsec": 1.7149949974987495,
+      "r_over_thetaE": 1.2703666648138885,
+      "Rs_arcsec": 0.20149701435512515,
+      "alpha_Rs": 0.008982281272461317
+    },
+    {
+      "label": "subhalo_NFW_9",
+      "mass_Msun": 220835340.95337194,
+      "concentration": 44.77122849758849,
+      "center_x": -0.2233277152229321,
+      "center_y": -0.38206273762350995,
+      "r_arcsec": 0.44254627313656825,
+      "r_over_thetaE": 0.32781205417523573,
+      "Rs_arcsec": 0.07902181848994985,
+      "alpha_Rs": 0.0023578351829935417
+    }
+  ],
+  "npix": 120,
+  "deltapix": 0.05
+}

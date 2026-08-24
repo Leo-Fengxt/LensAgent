@@ -1,0 +1,166 @@
+{
+  "system_id": "FD2",
+  "group": "F",
+  "ground_truth_model": "EPL+Shear+NFW_sub",
+  "z_lens": 0.2,
+  "z_source": 0.65,
+  "theta_E_arcsec": 1.35,
+  "gamma_3D": 2.0,
+  "q_mass": 0.8,
+  "gamma_ext": 0.04,
+  "kappa_ext": 0.0,
+  "lens_model_list": [
+    "EPL",
+    "SHEAR",
+    "NFW",
+    "NFW",
+    "NFW",
+    "NFW"
+  ],
+  "kwargs_lens": [
+    {
+      "theta_E": 1.35,
+      "gamma": 2.0,
+      "e1": 6.803593328596405e-18,
+      "e2": 0.11111111111111108,
+      "center_x": 0,
+      "center_y": 0
+    },
+    {
+      "gamma1": -0.04,
+      "gamma2": 4.898587196589413e-18,
+      "ra_0": 0,
+      "dec_0": 0
+    },
+    {
+      "Rs": 0.43357518383739024,
+      "alpha_Rs": 0.01739952740501415,
+      "center_x": -1.275,
+      "center_y": 0.625
+    },
+    {
+      "Rs": 0.2357473986968186,
+      "alpha_Rs": 0.019940877552397,
+      "center_x": 0.8250000000000002,
+      "center_y": -0.7250000000000001
+    },
+    {
+      "Rs": 0.2155125278836704,
+      "alpha_Rs": 0.014535217721821434,
+      "center_x": 0.5749999999999997,
+      "center_y": -1.175
+    },
+    {
+      "Rs": 0.1590488074656682,
+      "alpha_Rs": 0.015798736084157827,
+      "center_x": 1.175,
+      "center_y": 0.2250000000000001
+    }
+  ],
+  "component_labels": [
+    "main_EPL",
+    "shear",
+    "subhalo_NFW_0",
+    "subhalo_NFW_1",
+    "subhalo_NFW_2",
+    "subhalo_NFW_3"
+  ],
+  "kwargs_source": [
+    {
+      "amp": 276.3425047675583,
+      "R_sersic": 0.22,
+      "n_sersic": 2.0,
+      "e1": 0,
+      "e2": 0,
+      "center_x": -0.058229736820351034,
+      "center_y": 0.10492520073763335
+    }
+  ],
+  "kwargs_lens_light": [
+    {
+      "amp": 24.0965922580397,
+      "R_sersic": 0.5,
+      "n_sersic": 2.5,
+      "e1": 6.0559457100693315e-18,
+      "e2": 0.09890109890109894,
+      "center_x": 0,
+      "center_y": 0
+    },
+    {
+      "amp": 22.861874951260546,
+      "R_sersic": 2.0,
+      "n_sersic": 4.0,
+      "e1": 6.0559457100693315e-18,
+      "e2": 0.09890109890109894,
+      "center_x": 0,
+      "center_y": 0
+    }
+  ],
+  "lens_light_model_list": [
+    "SERSIC_ELLIPSE",
+    "SERSIC_ELLIPSE"
+  ],
+  "source_light_model_list": [
+    "SERSIC_ELLIPSE"
+  ],
+  "sigma_v_true_kms": 267.60126809247726,
+  "sigma_v_observed_kms": 239.57489586372594,
+  "sigma_v_error_kms": 16.056076085548636,
+  "f_DM_within_thetaE": null,
+  "stellar_mass_Msun": null,
+  "companion_profile": null,
+  "sigma_comp_kms": null,
+  "comp_separation_theta_E": null,
+  "subhalo_profile": "NFW",
+  "subhalo_mass_Msun": null,
+  "subhalo_R_theta_E": null,
+  "subhalo_position": null,
+  "subhalo_population": [
+    {
+      "label": "subhalo_NFW_0",
+      "mass_Msun": 7359517494.767556,
+      "concentration": 26.25881979242653,
+      "center_x": -1.275,
+      "center_y": 0.625,
+      "r_arcsec": 1.4199471821162926,
+      "r_over_thetaE": 1.05181272749355,
+      "Rs_arcsec": 0.43357518383739024,
+      "alpha_Rs": 0.01739952740501415
+    },
+    {
+      "label": "subhalo_NFW_1",
+      "mass_Msun": 5535948675.986826,
+      "concentration": 43.92114108615725,
+      "center_x": 0.8250000000000002,
+      "center_y": -0.7250000000000001,
+      "r_arcsec": 1.09829413182444,
+      "r_over_thetaE": 0.8135512087588443,
+      "Rs_arcsec": 0.2357473986968186,
+      "alpha_Rs": 0.019940877552397
+    },
+    {
+      "label": "subhalo_NFW_2",
+      "mass_Msun": 3624831988.487299,
+      "concentration": 41.72022210915675,
+      "center_x": 0.5749999999999997,
+      "center_y": -1.175,
+      "r_arcsec": 1.308147545195113,
+      "r_over_thetaE": 0.9689981816260096,
+      "Rs_arcsec": 0.2155125278836704,
+      "alpha_Rs": 0.014535217721821434
+    },
+    {
+      "label": "subhalo_NFW_3",
+      "mass_Msun": 3167521998.458664,
+      "concentration": 54.046300102501576,
+      "center_x": 1.175,
+      "center_y": 0.2250000000000001,
+      "r_arcsec": 1.19634861140054,
+      "r_over_thetaE": 0.8861841565929925,
+      "Rs_arcsec": 0.1590488074656682,
+      "alpha_Rs": 0.015798736084157827
+    }
+  ],
+  "npix": 120,
+  "deltapix": 0.05
+}

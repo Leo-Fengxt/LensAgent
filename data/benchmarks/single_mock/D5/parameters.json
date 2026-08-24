@@ -1,0 +1,118 @@
+{
+  "system_id": "D5",
+  "group": "D",
+  "ground_truth_model": "EPL+Shear+SIS+NFW_sub",
+  "z_lens": 0.21,
+  "z_source": 0.65,
+  "theta_E_arcsec": 1.35,
+  "gamma_3D": 2.0,
+  "q_mass": 0.78,
+  "gamma_ext": 0.05,
+  "kappa_ext": 0.0,
+  "lens_model_list": [
+    "EPL",
+    "SHEAR",
+    "SIS",
+    "NFW"
+  ],
+  "kwargs_lens": [
+    {
+      "theta_E": 1.35,
+      "gamma": 2.0,
+      "e1": -0.06179775280898873,
+      "e2": 0.10703684765875084,
+      "center_x": 0,
+      "center_y": 0
+    },
+    {
+      "gamma1": -0.025000000000000022,
+      "gamma2": -0.04330127018922192,
+      "ra_0": 0,
+      "dec_0": 0
+    },
+    {
+      "theta_E": 0.22238315058581415,
+      "center_x": -1.3500000000000003,
+      "center_y": -2.3382685902179845
+    },
+    {
+      "Rs": 0.22459763590404835,
+      "alpha_Rs": 0.027193285946983194,
+      "center_x": -1.2685850380609762,
+      "center_y": 0.4617271934896532
+    }
+  ],
+  "component_labels": [
+    "main_EPL",
+    "shear",
+    "companion_SIS",
+    "subhalo_NFW"
+  ],
+  "kwargs_source": [
+    {
+      "amp": 205.10534997893163,
+      "R_sersic": 0.28,
+      "n_sersic": 2.0,
+      "e1": 0,
+      "e2": 0,
+      "center_x": 0.0946893802151356,
+      "center_y": 0.11633538272801394
+    }
+  ],
+  "kwargs_lens_light": [
+    {
+      "amp": 23.942542039106183,
+      "R_sersic": 0.55,
+      "n_sersic": 2.5,
+      "e1": -0.05555555555555551,
+      "e2": 0.0962250448649376,
+      "center_x": 0,
+      "center_y": 0
+    },
+    {
+      "amp": 22.715718316174637,
+      "R_sersic": 2.2,
+      "n_sersic": 4.0,
+      "e1": -0.05555555555555551,
+      "e2": 0.0962250448649376,
+      "center_x": 0,
+      "center_y": 0
+    },
+    {
+      "amp": 18.498892566734416,
+      "R_sersic": 0.6,
+      "n_sersic": 4.0,
+      "e1": 0,
+      "e2": 0,
+      "center_x": -1.3500000000000003,
+      "center_y": -2.3382685902179845
+    }
+  ],
+  "lens_light_model_list": [
+    "SERSIC_ELLIPSE",
+    "SERSIC_ELLIPSE",
+    "SERSIC_ELLIPSE"
+  ],
+  "source_light_model_list": [
+    "SERSIC_ELLIPSE"
+  ],
+  "sigma_v_true_kms": 247.09802145900267,
+  "sigma_v_observed_kms": 250.77271493868218,
+  "sigma_v_error_kms": 14.82588128754016,
+  "sigma_v_noise_delta": 0.014871399851694837,
+  "sigma_v_noise_seed": 846046,
+  "sigma_v_noise_draw_index": 16,
+  "sigma_v_noise_z": 0.24785666419491395,
+  "sigma_v_truth_method": "KinematicsAPI",
+  "f_DM_within_thetaE": null,
+  "stellar_mass_Msun": null,
+  "companion_profile": "SIS",
+  "sigma_comp_kms": 110.0,
+  "comp_separation_theta_E": 2.0,
+  "subhalo_profile": "NFW",
+  "subhalo_mass_Msun": 8000000000.0,
+  "subhalo_R_theta_E": 1.0,
+  "subhalo_position": "on_arc",
+  "npix": 120,
+  "deltapix": 0.05
+}

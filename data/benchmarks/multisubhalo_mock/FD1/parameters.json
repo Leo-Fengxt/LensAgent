@@ -1,0 +1,147 @@
+{
+  "system_id": "FD1",
+  "group": "F",
+  "ground_truth_model": "EPL+Shear+NFW_sub",
+  "z_lens": 0.2,
+  "z_source": 0.65,
+  "theta_E_arcsec": 1.3,
+  "gamma_3D": 2.0,
+  "q_mass": 0.8,
+  "gamma_ext": 0.04,
+  "kappa_ext": 0.0,
+  "lens_model_list": [
+    "EPL",
+    "SHEAR",
+    "NFW",
+    "NFW",
+    "NFW"
+  ],
+  "kwargs_lens": [
+    {
+      "theta_E": 1.3,
+      "gamma": 2.0,
+      "e1": 6.803593328596405e-18,
+      "e2": 0.11111111111111108,
+      "center_x": 0,
+      "center_y": 0
+    },
+    {
+      "gamma1": -0.04,
+      "gamma2": 4.898587196589413e-18,
+      "ra_0": 0,
+      "dec_0": 0
+    },
+    {
+      "Rs": 0.24410582053260527,
+      "alpha_Rs": 0.022052758567458672,
+      "center_x": -0.625,
+      "center_y": 1.475
+    },
+    {
+      "Rs": 0.18029991231981948,
+      "alpha_Rs": 0.011756274888588167,
+      "center_x": 0.4249999999999998,
+      "center_y": -1.275
+    },
+    {
+      "Rs": 0.201579032966564,
+      "alpha_Rs": 0.009802512763648241,
+      "center_x": -1.5749999999999997,
+      "center_y": 0.5249999999999999
+    }
+  ],
+  "component_labels": [
+    "main_EPL",
+    "shear",
+    "subhalo_NFW_0",
+    "subhalo_NFW_1",
+    "subhalo_NFW_2"
+  ],
+  "kwargs_source": [
+    {
+      "amp": 276.3425047675583,
+      "R_sersic": 0.22,
+      "n_sersic": 2.0,
+      "e1": 0,
+      "e2": 0,
+      "center_x": -0.11729204208705339,
+      "center_y": 0.025349099846915555
+    }
+  ],
+  "kwargs_lens_light": [
+    {
+      "amp": 24.0965922580397,
+      "R_sersic": 0.5,
+      "n_sersic": 2.5,
+      "e1": 6.0559457100693315e-18,
+      "e2": 0.09890109890109894,
+      "center_x": 0,
+      "center_y": 0
+    },
+    {
+      "amp": 22.861874951260546,
+      "R_sersic": 2.0,
+      "n_sersic": 4.0,
+      "e1": 6.0559457100693315e-18,
+      "e2": 0.09890109890109894,
+      "center_x": 0,
+      "center_y": 0
+    }
+  ],
+  "lens_light_model_list": [
+    "SERSIC_ELLIPSE",
+    "SERSIC_ELLIPSE"
+  ],
+  "source_light_model_list": [
+    "SERSIC_ELLIPSE"
+  ],
+  "sigma_v_true_kms": 262.59893414653857,
+  "sigma_v_observed_kms": 262.25753528944557,
+  "sigma_v_error_kms": 15.755936048792314,
+  "f_DM_within_thetaE": null,
+  "stellar_mass_Msun": null,
+  "companion_profile": null,
+  "sigma_comp_kms": null,
+  "comp_separation_theta_E": null,
+  "subhalo_profile": "NFW",
+  "subhalo_mass_Msun": null,
+  "subhalo_R_theta_E": null,
+  "subhalo_position": null,
+  "subhalo_population": [
+    {
+      "label": "subhalo_NFW_0",
+      "mass_Msun": 6364261291.063111,
+      "concentration": 44.43525784201459,
+      "center_x": -0.625,
+      "center_y": 1.475,
+      "r_arcsec": 1.6019519343600794,
+      "r_over_thetaE": 1.2322707187385227,
+      "Rs_arcsec": 0.24410582053260527,
+      "alpha_Rs": 0.022052758567458672
+    },
+    {
+      "label": "subhalo_NFW_1",
+      "mass_Msun": 2498626871.6228385,
+      "concentration": 44.05157685608162,
+      "center_x": 0.4249999999999998,
+      "center_y": -1.275,
+      "r_arcsec": 1.343968005571561,
+      "r_over_thetaE": 1.0338215427473547,
+      "Rs_arcsec": 0.18029991231981948,
+      "alpha_Rs": 0.011756274888588167
+    },
+    {
+      "label": "subhalo_NFW_2",
+      "mass_Msun": 2209663902.3091135,
+      "concentration": 37.819857533941565,
+      "center_x": -1.5749999999999997,
+      "center_y": 0.5249999999999999,
+      "r_arcsec": 1.6601957715883988,
+      "r_over_thetaE": 1.2770736704526144,
+      "Rs_arcsec": 0.201579032966564,
+      "alpha_Rs": 0.009802512763648241
+    }
+  ],
+  "npix": 120,
+  "deltapix": 0.05
+}

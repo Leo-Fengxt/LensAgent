@@ -1,0 +1,93 @@
+{
+  "system_id": "A3",
+  "group": "A",
+  "ground_truth_model": "EPL+Shear",
+  "z_lens": 0.3,
+  "z_source": 1.0,
+  "theta_E_arcsec": 0.9,
+  "gamma_3D": 2.1,
+  "q_mass": 0.9,
+  "gamma_ext": 0.02,
+  "kappa_ext": 0.0,
+  "lens_model_list": [
+    "EPL",
+    "SHEAR"
+  ],
+  "kwargs_lens": [
+    {
+      "theta_E": 0.9,
+      "gamma": 2.1,
+      "e1": 0.04945750635715307,
+      "e2": 0.01800106017503519,
+      "center_x": 0,
+      "center_y": 0
+    },
+    {
+      "gamma1": 1.2246467991473532e-18,
+      "gamma2": 0.02,
+      "ra_0": 0,
+      "dec_0": 0
+    }
+  ],
+  "component_labels": [
+    "main_EPL",
+    "shear"
+  ],
+  "kwargs_source": [
+    {
+      "amp": 353.81668086961287,
+      "R_sersic": 0.15,
+      "n_sersic": 1.0,
+      "e1": 0,
+      "e2": 0,
+      "center_x": -0.01236696752461336,
+      "center_y": -0.04844644583708034
+    }
+  ],
+  "kwargs_lens_light": [
+    {
+      "amp": 18.69963381985805,
+      "R_sersic": 0.375,
+      "n_sersic": 2.5,
+      "e1": 0.03915385919941283,
+      "e2": 0.01425083930523619,
+      "center_x": 0,
+      "center_y": 0
+    },
+    {
+      "amp": 15.923882027665561,
+      "R_sersic": 1.5,
+      "n_sersic": 5.0,
+      "e1": 0.03915385919941283,
+      "e2": 0.01425083930523619,
+      "center_x": 0,
+      "center_y": 0
+    }
+  ],
+  "lens_light_model_list": [
+    "SERSIC_ELLIPSE",
+    "SERSIC_ELLIPSE"
+  ],
+  "source_light_model_list": [
+    "SERSIC_ELLIPSE"
+  ],
+  "sigma_v_true_kms": 203.92657886281157,
+  "sigma_v_observed_kms": 210.0449320116512,
+  "sigma_v_error_kms": 12.235594731768694,
+  "sigma_v_noise_delta": 0.030002725407146085,
+  "sigma_v_noise_seed": 846046,
+  "sigma_v_noise_draw_index": 2,
+  "sigma_v_noise_z": 0.5000454234524347,
+  "sigma_v_truth_method": "KinematicsAPI",
+  "f_DM_within_thetaE": null,
+  "stellar_mass_Msun": null,
+  "companion_profile": null,
+  "sigma_comp_kms": null,
+  "comp_separation_theta_E": null,
+  "subhalo_profile": null,
+  "subhalo_mass_Msun": null,
+  "subhalo_R_theta_E": null,
+  "subhalo_position": null,
+  "npix": 120,
+  "deltapix": 0.05
+}

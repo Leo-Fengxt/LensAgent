@@ -1,0 +1,101 @@
+{
+  "system_id": "D4",
+  "group": "D",
+  "ground_truth_model": "EPL+Shear+NFW_sub",
+  "z_lens": 0.23,
+  "z_source": 0.75,
+  "theta_E_arcsec": 1.2,
+  "gamma_3D": 2.0,
+  "q_mass": 0.8,
+  "gamma_ext": 0.03,
+  "kappa_ext": 0.0,
+  "lens_model_list": [
+    "EPL",
+    "SHEAR",
+    "NFW"
+  ],
+  "kwargs_lens": [
+    {
+      "theta_E": 1.2,
+      "gamma": 2.0,
+      "e1": -0.01929424196299225,
+      "e2": 0.10942308366802309,
+      "center_x": 0,
+      "center_y": 0
+    },
+    {
+      "gamma1": -0.02954423259036624,
+      "gamma2": -0.005209445330007914,
+      "ra_0": 0,
+      "dec_0": 0
+    },
+    {
+      "Rs": 0.06879042389040683,
+      "alpha_Rs": 0.0049679603816346896,
+      "center_x": 1.4695761589768238e-16,
+      "center_y": -1.2
+    }
+  ],
+  "component_labels": [
+    "main_EPL",
+    "shear",
+    "subhalo_NFW"
+  ],
+  "kwargs_source": [
+    {
+      "amp": 287.54910444499416,
+      "R_sersic": 0.22,
+      "n_sersic": 1.5,
+      "e1": 0,
+      "e2": 0,
+      "center_x": 0.0996712966889304,
+      "center_y": 0.008101395950526847
+    }
+  ],
+  "kwargs_lens_light": [
+    {
+      "amp": 24.350530006506308,
+      "R_sersic": 0.475,
+      "n_sersic": 2.5,
+      "e1": -0.017173995593432675,
+      "e2": 0.0973985689792294,
+      "center_x": 0,
+      "center_y": 0
+    },
+    {
+      "amp": 22.564784813863746,
+      "R_sersic": 1.9,
+      "n_sersic": 4.2,
+      "e1": -0.017173995593432675,
+      "e2": 0.0973985689792294,
+      "center_x": 0,
+      "center_y": 0
+    }
+  ],
+  "lens_light_model_list": [
+    "SERSIC_ELLIPSE",
+    "SERSIC_ELLIPSE"
+  ],
+  "source_light_model_list": [
+    "SERSIC_ELLIPSE"
+  ],
+  "sigma_v_true_kms": 225.14936332023834,
+  "sigma_v_observed_kms": 227.46649699624788,
+  "sigma_v_error_kms": 13.5089617992143,
+  "sigma_v_noise_delta": 0.010291539988562201,
+  "sigma_v_noise_seed": 846046,
+  "sigma_v_noise_draw_index": 15,
+  "sigma_v_noise_z": 0.1715256664760367,
+  "sigma_v_truth_method": "KinematicsAPI",
+  "f_DM_within_thetaE": null,
+  "stellar_mass_Msun": null,
+  "companion_profile": null,
+  "sigma_comp_kms": null,
+  "comp_separation_theta_E": null,
+  "subhalo_profile": "NFW",
+  "subhalo_mass_Msun": 500000000.0,
+  "subhalo_R_theta_E": 1.0,
+  "subhalo_position": "on_arc",
+  "npix": 120,
+  "deltapix": 0.05
+}
