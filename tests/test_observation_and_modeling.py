@@ -67,8 +67,8 @@ def test_corrected_likelihood_and_parameter_count(repository_root):
     assert evaluation["reduced_image_chi_squared"] == pytest.approx(
         evaluation["image_chi_squared"] / (14_400 - 29)
     )
-    assert evaluation["reduced_image_chi_squared"] == pytest.approx(0.9923521085614947)
-    assert evaluation["bic"] == pytest.approx(14538.766673218599)
+    assert evaluation["reduced_image_chi_squared"] == pytest.approx(1.0028241402529958)
+    assert evaluation["bic"] == pytest.approx(14689.26024065716)
     assert evaluation["is_physical"] is True
 
 

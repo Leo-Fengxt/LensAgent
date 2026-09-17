@@ -33,8 +33,8 @@
     },
     {
       "path": "data/benchmarks/multisubhalo_mock/FD1/parameters.json",
-      "sha256": "8717e6d44a2c13db8bae845faa954da50ecb628dfb15404b6e1422cf96609366",
-      "bytes": 3467
+      "sha256": "3dee74c5f0d6a0eabe8e6314b8a69cfb6855ce8ababef5d6971cc86b713bcf3b",
+      "bytes": 3525
     },
     {
       "path": "data/benchmarks/multisubhalo_mock/FD2/kappa_main_EPL.fits",
@@ -73,8 +73,8 @@
     },
     {
       "path": "data/benchmarks/multisubhalo_mock/FD2/parameters.json",
-      "sha256": "817269120e946807ffccf6369d44f2bf459b143b13ddc207e90d6de91930ab0e",
-      "bytes": 3979
+      "sha256": "919e8b82e655f32650ab15132f46257db0bf6ca9442cd2133f84fdc11a577f9d",
+      "bytes": 4037
     },
     {
       "path": "data/benchmarks/multisubhalo_mock/FD3/kappa_main_EPL.fits",
@@ -103,8 +103,8 @@
     },
     {
       "path": "data/benchmarks/multisubhalo_mock/FD3/parameters.json",
-      "sha256": "4a2831f147e2be411155eb2085f5e1aa5cf6d8798936760fb4461d9a069108d3",
-      "bytes": 2954
+      "sha256": "851746f1cc1d75f74b2b1b5f3e02b8ebf7efebf85b0717472080cae676ef1dc8",
+      "bytes": 3011
     },
     {
       "path": "data/benchmarks/multisubhalo_mock/FR1/kappa_main_EPL.fits",
@@ -163,8 +163,8 @@
     },
     {
       "path": "data/benchmarks/multisubhalo_mock/FR1/parameters.json",
-      "sha256": "c817122810f77b040909a77d710bf883a6e63e2c8c062ad29675f563bfa604aa",
-      "bytes": 6320
+      "sha256": "c393b9df50c06169b1d5534f4ea7501011c0027fe0042c2439c634fa848d08dd",
+      "bytes": 6378
     },
     {
       "path": "data/benchmarks/multisubhalo_mock/FR2/kappa_main_EPL.fits",
@@ -233,8 +233,8 @@
     },
     {
       "path": "data/benchmarks/multisubhalo_mock/FR2/parameters.json",
-      "sha256": "29ca83805b0784aed23f55355f28381c51db192a46e0d403683169f930efa3e9",
-      "bytes": 7450
+      "sha256": "8fbe026ba0bb9bc4143e499068076dd113b3a9e38739abac7ded0150ed54a652",
+      "bytes": 7508
     },
     {
       "path": "data/benchmarks/single_mock/A1/kappa_main_EPL.fits",
@@ -253,8 +253,8 @@
     },
     {
       "path": "data/benchmarks/single_mock/A1/parameters.json",
-      "sha256": "ad3fff3269997481187b616dd71ea4624c2180d3b82bf44e2075cb74be5377dd",
-      "bytes": 2044
+      "sha256": "ae6067dcdd6ff29827503c110a85a5c07fcfdf792b20e2e0a9de156ec20b3f13",
+      "bytes": 2102
     },
     {
       "path": "data/benchmarks/single_mock/A2/kappa_main_EPL.fits",
@@ -273,8 +273,8 @@
     },
     {
       "path": "data/benchmarks/single_mock/A2/parameters.json",
-      "sha256": "53957fc16330ac2f4d012e27820da27189134cc3ce71e299331bf158a26ae87e",
-      "bytes": 2046
+      "sha256": "1ff011511f03ce2a5ce4a9ee17ec2c06bbf27014eb6487b2ca0516f9fffba1ff",
+      "bytes": 2104
     },
     {
       "path": "data/benchmarks/single_mock/A3/kappa_main_EPL.fits",
@@ -293,8 +293,8 @@
     },
     {
       "path": "data/benchmarks/single_mock/A3/parameters.json",
-      "sha256": "efc8c186d62f51eb50608dffbb7c04b62d27869bcfd668e4900a3ff461d2e743",
-      "bytes": 2029
+      "sha256": "1af823ebd154f87c5d68df5fcfb463cf15bc4f7ca83fd7dcc963ad5f6a38c319",
+      "bytes": 2086
     },
     {
       "path": "data/benchmarks/single_mock/A4/kappa_main_EPL.fits",
@@ -313,8 +313,8 @@
     },
     {
       "path": "data/benchmarks/single_mock/A4/parameters.json",
-      "sha256": "feafd3aeca9be7a39ff33b37b904f5e29bc8dbe86647e338c976b3b859a26946",
-      "bytes": 2042
+      "sha256": "295d664f87bdde49a9eafbc455279d6dc69fbdb02c6644ec146b23bdc2cccb39",
+      "bytes": 2099
     },
     {
       "path": "data/benchmarks/single_mock/A5/kappa_main_EPL.fits",
@@ -333,8 +333,8 @@
     },
     {
       "path": "data/benchmarks/single_mock/A5/parameters.json",
-      "sha256": "e60c72d0559eb80cbf3f7b8d8970cc00d60851b1d4fd24836e5a93ab619edf6c",
-      "bytes": 2035
+      "sha256": "749d3303f8955e9b3f78b5c2b06b71b6220639820ed681cd15908d05b6156b1b",
+      "bytes": 2093
     },
     {
       "path": "data/benchmarks/single_mock/B1/kappa_main_Hernquist.fits",
@@ -358,8 +358,8 @@
     },
     {
       "path": "data/benchmarks/single_mock/B1/parameters.json",
-      "sha256": "2ac7d32c253bdfbc21af291269a772c0f4d0940fd30213cf347892955b0ca9ab",
-      "bytes": 1867
+      "sha256": "bc4ff18752030956c441596f0881989292438637eb92df38308d358aceb3b1ee",
+      "bytes": 1925
     },
     {
       "path": "data/benchmarks/single_mock/B2/kappa_main_Hernquist.fits",
@@ -383,8 +383,8 @@
     },
     {
       "path": "data/benchmarks/single_mock/B2/parameters.json",
-      "sha256": "dfd070c50fcaf23ff6fc17886a3cd5d98f31d5235bb8c7c3e0f080a47d7e018a",
-      "bytes": 1868
+      "sha256": "7b4e00ab4488ae21a7ca29ec86848f078994dad84512a95f6e40608b2eec3ffa",
+      "bytes": 1926
     },
     {
       "path": "data/benchmarks/single_mock/B3/kappa_main_Hernquist.fits",
@@ -408,8 +408,8 @@
     },
     {
       "path": "data/benchmarks/single_mock/B3/parameters.json",
-      "sha256": "e3e9daf7fdb5324a11bd9ff82baf10d5654a24c2c9435a70f8dbb3a9f8589ccf",
-      "bytes": 1871
+      "sha256": "201e75adbc5c10f669ca435f93e23c43962e935ad032e0a3aafeb2cf247fffbc",
+      "bytes": 1929
     },
     {
       "path": "data/benchmarks/single_mock/C1/kappa_main_EPL.fits",
@@ -428,8 +428,8 @@
     },
     {
       "path": "data/benchmarks/single_mock/C1/parameters.json",
-      "sha256": "fcfac3eeb0bd3a54b7c34b40e5908acd7e8cd2400069c6882283436426251922",
-      "bytes": 2153
+      "sha256": "9d1b5c2ab94cf32ed3c7cbc85fa4273f5d6d2541357b370b053e5814c48cd750",
+      "bytes": 2209
     },
     {
       "path": "data/benchmarks/single_mock/C2/kappa_main_EPL.fits",
@@ -448,8 +448,8 @@
     },
     {
       "path": "data/benchmarks/single_mock/C2/parameters.json",
-      "sha256": "96b502f74265dcb5a867ba4d3c5be6f4cd8db884f0d88a74cd8e2a66fefb5d75",
-      "bytes": 2167
+      "sha256": "65c89c9ef965ef86d92852af27bd0b944d27514cba4a7d1d34ac55b6e3203f8b",
+      "bytes": 2224
     },
     {
       "path": "data/benchmarks/single_mock/C3/kappa_main_EPL.fits",
@@ -468,8 +468,8 @@
     },
     {
       "path": "data/benchmarks/single_mock/C3/parameters.json",
-      "sha256": "664bf533381835187a8d2b8b3efcdc7eb139d49735a9cff702efc1c0c5473dc8",
-      "bytes": 2165
+      "sha256": "3e056258a4beb7160a0506fd70f95777110d83e20fa62b61c3e44a57ae4a86f5",
+      "bytes": 2223
     },
     {
       "path": "data/benchmarks/single_mock/C4/kappa_main_EPL.fits",
@@ -488,8 +488,8 @@
     },
     {
       "path": "data/benchmarks/single_mock/C4/parameters.json",
-      "sha256": "70f7719c7db4ee2e9568ed376ba77acfc65201036ae8f4f6598c1625795990e4",
-      "bytes": 2044
+      "sha256": "c2de4289b2d2fda92af48fdb9c768b6123162999eb4de1ce01bc2aac46752b98",
+      "bytes": 2102
     },
     {
       "path": "data/benchmarks/single_mock/D1/kappa_main_EPL.fits",
@@ -513,8 +513,8 @@
     },
     {
       "path": "data/benchmarks/single_mock/D1/parameters.json",
-      "sha256": "8c32a850259e6137d71b3df12055cb468e116f6f36479e7f23c873c6bc0957e5",
-      "bytes": 2239
+      "sha256": "8cc95db32da3c21e1619440f9283be9e332bea7cc258326166923b58e80dba91",
+      "bytes": 2296
     },
     {
       "path": "data/benchmarks/single_mock/D2/kappa_main_EPL.fits",
@@ -538,8 +538,8 @@
     },
     {
       "path": "data/benchmarks/single_mock/D2/parameters.json",
-      "sha256": "96a7b486c918b45fe665d58473290429a32ce11a8ec32d16aa9d0df10db507de",
-      "bytes": 2263
+      "sha256": "b770d666a374c660320c045f511ca856ecc4f202f9fcf60a507a21c6147e5040",
+      "bytes": 2319
     },
     {
       "path": "data/benchmarks/single_mock/D3/kappa_main_EPL.fits",
@@ -563,8 +563,8 @@
     },
     {
       "path": "data/benchmarks/single_mock/D3/parameters.json",
-      "sha256": "34cccec9f7ab61383f52b89846d2aeee7b0ab1790ef988383c18d7d752ce7005",
-      "bytes": 2257
+      "sha256": "3e5367fc443f9199f35326f53e3885644f9386e7d5a705cb26ed7e7ba574584d",
+      "bytes": 2315
     },
     {
       "path": "data/benchmarks/single_mock/D4/kappa_main_EPL.fits",
@@ -588,8 +588,8 @@
     },
     {
       "path": "data/benchmarks/single_mock/D4/parameters.json",
-      "sha256": "6f8b999e84216712feea3be9f1dc1148a0e41476be2a2c6dc34e0db9c47f3b83",
-      "bytes": 2249
+      "sha256": "aa1b85d9367f6b1d6d60a3255d0a204af0c94e0a285f62d67fd11c474d70b73b",
+      "bytes": 2307
     },
     {
       "path": "data/benchmarks/single_mock/D5/kappa_companion_SIS.fits",
@@ -618,8 +618,8 @@
     },
     {
       "path": "data/benchmarks/single_mock/D5/parameters.json",
-      "sha256": "22f7ffaa12c6725ae0c7b0b89be657d2a3583945364eb577f22ee13db59f67c8",
-      "bytes": 2647
+      "sha256": "3620698fd040f02308d79221ea1731b8a095bd3d369252703bfbc3c455f57f37",
+      "bytes": 2704
     },
     {
       "path": "data/benchmarks/single_mock/D6/kappa_companion_SIS.fits",
@@ -648,8 +648,8 @@
     },
     {
       "path": "data/benchmarks/single_mock/D6/parameters.json",
-      "sha256": "59974ee97231187300e32e79e11e65b9bd6bea771cb036d10c0254aebf88d4b4",
-      "bytes": 2416
+      "sha256": "5deeb394c8269c63afa24099074e5736fcf9dabb7809fefc256e5f8cf1e1c100",
+      "bytes": 2472
     },
     {
       "path": "data/benchmarks/single_mock/D7/kappa_companion_SIS.fits",
@@ -678,8 +678,8 @@
     },
     {
       "path": "data/benchmarks/single_mock/D7/parameters.json",
-      "sha256": "a423854bf5f3d79c3b9f6178658c002f6e1e8d12e746228eee553856a462cb48",
-      "bytes": 2645
+      "sha256": "313c12f90096a13086faf3480860cad1654c409d9f16516288c050984616848b",
+      "bytes": 2703
     },
     {
       "path": "data/benchmarks/single_mock/D8/kappa_companion_SIS.fits",
@@ -708,8 +708,8 @@
     },
     {
       "path": "data/benchmarks/single_mock/D8/parameters.json",
-      "sha256": "d6964523df8d3d4c3cd2e9d45a8681816282fe7542197307357edc49cf61c732",
-      "bytes": 2411
+      "sha256": "8b7cbd8c26adf72ff036d6a6982dfe340e221709b6857d0bbc613493a5cc6ef8",
+      "bytes": 2469
     }
   ]
 }

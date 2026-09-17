@@ -10,6 +10,8 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
+import numpy as np
+
 from lensagent.agent.client import (
     CallBudgetExhausted,
     ChatCompletionsClient,
@@ -81,6 +83,10 @@ class LensAgentEpisode:
         self.system_prompt = system_prompt or build_system_prompt(
             parameter_space, scoring
         )
+        if observation.hst:
+            from lensagent.agent.prompts import refinement_instructions
+
+            self.system_prompt += refinement_instructions(observation, parameter_space)
         self.evaluation_formatter = evaluation_formatter
         self.proposal_normalizer = proposal_normalizer
         self.evaluator = evaluator or self._evaluate
@@ -192,6 +198,9 @@ class LensAgentEpisode:
                 chi_squared = float(
                     evaluation.get("reduced_image_chi_squared", float("inf"))
                 )
+                if self.observation.hst:
+                    chi_squared = (abs(float(np.log(chi_squared)))
+                                   if np.isfinite(chi_squared) and chi_squared > 0 else float("inf"))
                 if chi_squared < best_chi_squared:
                     best_chi_squared = chi_squared
                     best_proposal = proposal

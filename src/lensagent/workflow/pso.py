@@ -408,6 +408,11 @@ def run_family_pso(
     parameter_space: ParameterSpace,
     config: PSOConfig,
 ) -> FamilyScoutResult:
+    native_space = parameter_space
+    if observation.hst:
+        from lensagent.workflow.optimizer import optimizer_space
+
+        parameter_space = optimizer_space(parameter_space)
     fitting_model = dict(parameter_space.model)
     if parameter_space.pso_proxy_lens_models:
         fitting_model["lens_model_list"] = list(parameter_space.pso_proxy_lens_models)
@@ -416,6 +421,13 @@ def run_family_pso(
     if observation.likelihood_mask is not None:
         likelihood["image_likelihood_mask_list"] = [observation.likelihood_mask]
     parameters = fitting_parameters(parameter_space, fitting_model)
+    if observation.hst:
+        from lensagent.modeling.constraints import MacroFloor
+
+        floor = MacroFloor.from_model(fitting_model)
+        parameters = floor.project_start(parameters)
+        likelihood["custom_logL_addition"] = lambda kwargs_lens, **kwargs: (
+            0.0 if floor.accepts(kwargs_lens) else -1e30)
 
     fits: list[PSOFit] = []
     for _ in range(config.runs):
@@ -444,7 +456,7 @@ def run_family_pso(
                 family=parameter_space.family,
                 bic=bic,
                 log_likelihood=log_likelihood,
-                proposal=_proposal_from_best_fit(sequence.best_fit(), parameter_space),
+                proposal=_proposal_from_best_fit(sequence.best_fit(), native_space),
             )
         )
     fits.sort(key=lambda fit: fit.bic)
@@ -471,7 +483,13 @@ def scout_families(
         return load_scout_results(destination)
 
     results: list[FamilyScoutResult] = []
-    with ThreadPoolExecutor(max_workers=max(1, workers)) as executor:
+    if observation.hst:
+        from lensagent.workflow.processes import process_pool
+
+        executor_context = process_pool(max(1, workers))
+    else:
+        executor_context = ThreadPoolExecutor(max_workers=max(1, workers))
+    with executor_context as executor:
         futures = {
             executor.submit(
                 run_family_pso, observation.with_model(space.model), space, config
@@ -525,9 +543,18 @@ def seed_database(
     random_count = max(seed_count - len(proposals), minimum_random)
     proposals.extend(database.scoring.random_proposal(rng) for _ in range(random_count))
     for index, proposal in enumerate(proposals[:seed_count]):
-        evaluation = evaluate_proposal(
-            proposal,
-            observation.with_model(parameter_space.model),
-            parameter_space,
-        )
+        if observation.hst:
+            from lensagent.modeling.safe_evaluate import safe_evaluate
+
+            evaluation, error = safe_evaluate(proposal, observation.with_model(parameter_space.model),
+                                               parameter_space, timeout_seconds=60)
+            if evaluation is None:
+                log.warning("PSO reference evaluation failed: %s", error)
+                continue
+        else:
+            evaluation = evaluate_proposal(
+                proposal,
+                observation.with_model(parameter_space.model),
+                parameter_space,
+            )
         database.add(database.create(proposal, evaluation, island=index % island_count))

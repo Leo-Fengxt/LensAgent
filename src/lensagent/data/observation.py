@@ -47,6 +47,8 @@ class Observation:
     model: dict[str, list[str]] = field(default_factory=dict)
     numerics: dict[str, Any] = field(default_factory=dict)
     noise_metadata: dict[str, Any] = field(default_factory=dict)
+    noise_map: np.ndarray | None = None
+    preparation_metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.system_id or not self.system_id.strip():
@@ -57,6 +59,11 @@ class Observation:
         if image.ndim != 2 or image.size == 0:
             raise ValueError("image_data must be a non-empty 2D array")
         object.__setattr__(self, "image_data", image)
+        if self.noise_map is not None:
+            noise = _array(self.noise_map, name="noise_map")
+            if noise.shape != image.shape or np.any(noise <= 0):
+                raise ValueError("noise_map must be positive and match image_data")
+            object.__setattr__(self, "noise_map", noise)
 
         for name in ("background_rms", "exposure_time"):
             value = _array(getattr(self, name), name=name)
@@ -96,8 +103,12 @@ class Observation:
             raise ValueError("pixel_scale must be positive")
 
     @property
+    def hst(self) -> bool:
+        return self.dataset is not DatasetKind.SDSS
+
+    @property
     def kwargs_data(self) -> dict[str, Any]:
-        return {
+        result = {
             "image_data": self.image_data,
             "background_rms": self.background_rms,
             "exposure_time": self.exposure_time,
@@ -105,6 +116,9 @@ class Observation:
             "dec_at_xy_0": self.dec_at_xy_0,
             "transform_pix2angle": self.transform_pix2angle,
         }
+        if self.noise_map is not None:
+            result["noise_map"] = self.noise_map
+        return result
 
     @property
     def kwargs_psf(self) -> dict[str, Any]:
@@ -144,6 +158,8 @@ class Observation:
             "numerics": self.numerics,
             "noise_metadata": self.noise_metadata,
         }
+        if self.preparation_metadata:
+            metadata["preparation_metadata"] = self.preparation_metadata
         digest.update(
             json.dumps(metadata, sort_keys=True, separators=(",", ":")).encode()
         )
@@ -155,6 +171,8 @@ class Observation:
             "psf_kernel": self.psf_kernel,
             "likelihood_mask": self.likelihood_mask,
         }
+        if self.noise_map is not None:
+            arrays["noise_map"] = self.noise_map
         for name, value in arrays.items():
             digest.update(name.encode())
             if value is None:
@@ -187,6 +205,7 @@ class Observation:
             "model": self.model,
             "numerics": self.numerics,
             "noise_metadata": self.noise_metadata,
+            "preparation_metadata": self.preparation_metadata,
         }
         mask = self.likelihood_mask
         np.savez_compressed(
@@ -198,6 +217,7 @@ class Observation:
             transform_pix2angle=self.transform_pix2angle,
             psf_kernel=self.psf_kernel,
             likelihood_mask=np.asarray([]) if mask is None else mask,
+            noise_map=np.asarray([]) if self.noise_map is None else self.noise_map,
         )
         return destination
 
@@ -208,6 +228,7 @@ class Observation:
             if metadata.pop("schema", None) != OBSERVATION_SCHEMA:
                 raise ValueError("unsupported observation schema")
             mask = bundle["likelihood_mask"]
+            noise = bundle["noise_map"] if "noise_map" in bundle else np.asarray([])
             return cls(
                 **metadata,
                 image_data=bundle["image_data"],
@@ -216,4 +237,5 @@ class Observation:
                 transform_pix2angle=bundle["transform_pix2angle"],
                 psf_kernel=bundle["psf_kernel"],
                 likelihood_mask=None if mask.size == 0 else mask,
+                noise_map=None if noise.size == 0 else noise,
             )

@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import json
 import math
+import threading
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -300,11 +301,14 @@ def run_fixed_count_agent(
     base_lens_count = len(base_proposal["kwargs_lens"])
     known_count = polish.known_count
     macro_names = set(space.bounds_lens[0])
+    archive_lock = threading.Lock()
+    archived_best = None
 
     def normalize(proposal):
         return _compact_proposal(proposal, base_proposal, known_count, macro_names)
 
     def evaluator(proposal):
+        nonlocal archived_best
         try:
             _validate_proposal(
                 proposal,
@@ -345,6 +349,17 @@ def run_fixed_count_agent(
             and evaluation["subhalo_mass_limit_ok"]
             and evaluation["subhalo_separation_ok"]
         )
+        valid = all(evaluation.get(flag) is not False for flag in (
+            "subhalo_mass_limit_ok", "subhalo_center_bounds_ok", "subhalo_separation_ok"))
+        with archive_lock:
+            from lensagent.output.artifacts import NumpyEncoder
+
+            fit = {"proposal": proposal, "evaluation": _scalar_evaluation(evaluation)}
+            with (output / "evaluations.jsonl").open("a") as handle:
+                handle.write(json.dumps({**fit, "eligible": valid}, cls=NumpyEncoder) + "\n")
+            if valid and (archived_best is None or evaluation["delta_bic"] > archived_best["evaluation"]["delta_bic"]):
+                archived_best = copy.deepcopy(fit)
+                write_json(output / "best_evaluation.json", archived_best)
         return evaluation, None
 
     initial = scoring.inject_fixed(copy.deepcopy(polish.selected.proposal))
@@ -394,6 +409,8 @@ def run_fixed_count_agent(
         random_seed=random_seed,
     )
     search.run()
+    if archived_best is not None:
+        database.add(database.create(archived_best["proposal"], archived_best["evaluation"]))
     eligible = [
         record
         for record in database.records

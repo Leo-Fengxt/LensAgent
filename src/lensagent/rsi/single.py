@@ -1,4 +1,4 @@
-"""Single-subhalo RSI for SDSS systems and single-subhalo mocks."""
+"""Frozen-macro single-subhalo RSI for SDSS observations."""
 
 from __future__ import annotations
 

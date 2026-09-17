@@ -167,7 +167,7 @@ def build_user_prompt(
         sections.extend(
             [
                 "",
-                f"### Reference {rank}",
+                f"### Reference {rank}" + (f" ({record.reference_role})" if getattr(record, "reference_role", None) else ""),
                 f"Quality: {record.quality:+.3f}",
                 (
                     "Reduced image chi-squared: "
@@ -190,7 +190,29 @@ def build_user_prompt(
             "Propose parameters that improve on the references and explore a different part of the allowed parameter space.",
         ]
     )
+    if observation.hst:
+        sections[-1] = ("Improve the references. Small, precise changes are welcome. Refine the best eligible fit "
+                        "while preserving its dispersion match, and use alternative references for exploration.")
     return "\n".join(sections)
+
+
+def refinement_instructions(observation, space):
+    from lensagent.modeling.constraints import MacroFloor
+
+    rows, columns = observation.image_data.shape
+    text = ("\nRefine the best fit with small changes, and explore other parts of the allowed range when useful. "
+            "Each action contains three distinct proposals; large changes are not required. "
+            "The best eligible reference is selected by image chi-squared closest to 1, not by the highest Q. "
+            "For two chi-squared values below 1, the higher value is better.\n"
+            f"The image has {columns} x {rows} pixels at {observation.pixel_scale:g} arcsec per pixel. "
+            "Coordinates are lens-centered angular coordinates in arcsec. The pixel-to-angle transform is "
+            f"{observation.transform_pix2angle.tolist()}, with origin "
+            f"({observation.ra_at_xy_0:g}, {observation.dec_at_xy_0:g}).\n")
+    floor = MacroFloor.from_model(space.model)
+    if len(floor.indices) >= 2:
+        text += (f"For macro components {list(floor.indices)}, each theta_E must be at least "
+                 f"{floor.fraction:g} times the largest macro theta_E.\n")
+    return text
 
 
 def format_evaluation(evaluation: dict[str, Any], observation: Observation) -> str:

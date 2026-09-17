@@ -550,6 +550,7 @@ class KinematicsAPI:
                 center_x=center_x,
                 center_y=center_y,
                 model_bool_list=model_kinematics_bool,
+                num_azimuthal_points=kwargs_mge.get("num_azimuthal_points", 20),
             )
             amps, sigmas, _norm = mge.mge_1d(
                 r_array, mass_r, N=kwargs_mge.get("n_comp", 20)

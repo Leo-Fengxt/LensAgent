@@ -33,6 +33,10 @@ def _worker(
 ) -> None:
     try:
         warnings.filterwarnings("ignore")
+        if observation.hst:
+            np.random.seed(17429)
+            warnings.filterwarnings("error", category=RuntimeWarning,
+                                    module=r"lenstronomy\.GalKin\.light_profile")
         from lensagent.modeling.evaluate import evaluate_proposal
 
         if "BLANK_PLANE" in parameter_space.model.get("lens_model_list", []):

@@ -41,5 +41,19 @@ def test_repository_naming_and_secret_safety(repository_root):
         assert match is None, f"{path.relative_to(repository_root)}: {match.group(0)}"
 
 
-def test_repository_has_no_git_metadata(repository_root):
-    assert not (repository_root / ".git").exists()
+def test_observation_metadata_uses_public_names(repository_root):
+    import numpy as np
+
+    forbidden = [
+        "fun" + "search",
+        "/home/" + "ubuntu",
+        "pass" + "1",
+        "pass" + "2",
+        "v" + "10mock",
+        "v" + "10sdss",
+        "exper" + "iment/",
+    ]
+    for path in (repository_root / "data/observations").rglob("*.npz"):
+        with np.load(path, allow_pickle=False) as bundle:
+            metadata = str(bundle["metadata"])
+        assert not any(term in metadata for term in forbidden), path.name

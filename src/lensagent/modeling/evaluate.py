@@ -33,6 +33,7 @@ def total_model_chi_squared(
     background_rms: np.ndarray,
     exposure_time: np.ndarray,
     likelihood_mask: np.ndarray | None = None,
+    noise_map: np.ndarray | None = None,
 ) -> tuple[float, np.ndarray, int]:
     """Calculate raw image chi-squared with model Poisson variance."""
     observed = np.asarray(observed, dtype=float)
@@ -43,7 +44,8 @@ def total_model_chi_squared(
         raise ValueError("background RMS and exposure time must be positive")
 
     residual = observed - model_image
-    variance = background_rms**2 + np.maximum(model_image, 0.0) / exposure_time
+    variance = (np.asarray(noise_map, dtype=float)**2 if noise_map is not None else
+                background_rms**2 + np.maximum(model_image, 0.0) / exposure_time)
     normalized = residual / np.sqrt(variance)
     if likelihood_mask is None:
         fitted_pixels = int(residual.size)
@@ -68,11 +70,22 @@ def image_parameter_count(
     kwargs_lens_light: list[dict[str, Any]],
     *,
     solve_linear: bool,
+    expanded_mass: bool = False,
 ) -> tuple[int, int]:
     constraints = parameter_space.lenstronomy_constraints
     counting_fixed = parameter_space.fixed_for_parameter_count
+    count_model = parameter_space.model
+    if expanded_mass and parameter_space.pso_proxy_lens_models:
+        from lensagent.workflow.optimizer import optimizer_space
+        from dataclasses import replace
+
+        counted = optimizer_space(replace(
+            parameter_space, fixed_lens=counting_fixed["kwargs_lens"],
+        ))
+        count_model = counted.model
+        counting_fixed = {**counting_fixed, "kwargs_lens": counted.fixed_lens}
     parameters = Param(
-        parameter_space.model,
+        count_model,
         kwargs_fixed_lens=list(counting_fixed["kwargs_lens"]),
         kwargs_fixed_source=list(counting_fixed["kwargs_source"]),
         kwargs_fixed_lens_light=list(counting_fixed["kwargs_lens_light"]),
@@ -202,6 +215,7 @@ def evaluate_proposal(
         data.background_rms,
         data.exposure_map,
         observation.likelihood_mask,
+        observation.noise_map,
     )
     nonlinear, linear = image_parameter_count(
         parameter_space,
@@ -210,6 +224,7 @@ def evaluate_proposal(
         kwargs_source,
         kwargs_lens_light,
         solve_linear=solve_linear,
+        expanded_mass=observation.hst,
     )
     parameter_count = nonlinear + linear
     degrees_of_freedom = fitted_pixels - parameter_count
@@ -260,6 +275,12 @@ def evaluate_proposal(
     except Exception as exc:
         log.debug("physicality evaluation failed: %s", exc)
         result.update({"is_physical": None, "poisson_rmse": None})
+    if observation.hst:
+        from lensagent.modeling.constraints import MacroFloor
+
+        result["macro_floor_ok"] = MacroFloor.from_model(parameter_space.model).accepts(proposal["kwargs_lens"])
+        if not result["macro_floor_ok"]:
+            result["is_physical"] = False
     return result
 
 
@@ -383,6 +404,8 @@ def evaluate_kinematics(
         "center_x": lens_center.get("center_x", 0.0),
         "center_y": lens_center.get("center_y", 0.0),
     }
+    if observation.hst:
+        kwargs_mge_mass["num_azimuthal_points"] = 1280
     lens_light_models = observation.model.get("lens_light_model_list", [])
     native_mge_light = bool(lens_light_models) and set(lens_light_models) <= {
         "MULTI_GAUSSIAN",

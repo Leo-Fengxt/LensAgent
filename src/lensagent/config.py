@@ -2,14 +2,20 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 
 
 class DatasetKind(StrEnum):
     SDSS = "sdss"
+    HST = "hst"
     SINGLE_MOCK = "single_mock"
     MULTISUBHALO_MOCK = "multisubhalo_mock"
+
+
+class ObservationMode(StrEnum):
+    SDSS = "sdss"
+    HST = "HST"
 
 
 class RSIMode(StrEnum):
@@ -17,8 +23,15 @@ class RSIMode(StrEnum):
     FIXED_COUNT = "fixed_count"
 
 
+class LLMProvider(StrEnum):
+    REQUESTY = "requesty"
+    OPENROUTER = "openrouter"
+    GEMINI = "gemini"
+
+
 @dataclass(frozen=True)
 class LLMConfig:
+    provider: LLMProvider = LLMProvider.REQUESTY
     primary_model: str = "vertex/google/gemini-3.1-pro-preview"
     auxiliary_model: str = "vertex/gemini-3.1-flash-lite"
     api_base_url: str = "https://router.requesty.ai/v1/chat/completions"
@@ -27,6 +40,49 @@ class LLMConfig:
     top_p: float = 0.95
     max_output_tokens: int = 40_000
     reasoning_effort: str = "high"
+
+
+def llm_config_for(
+    provider: LLMProvider | str,
+    *,
+    primary_model: str | None = None,
+    auxiliary_model: str | None = None,
+) -> LLMConfig:
+    selected = LLMProvider(provider)
+    if selected is LLMProvider.REQUESTY:
+        defaults = LLMConfig()
+    elif selected is LLMProvider.OPENROUTER:
+        defaults = LLMConfig(
+            provider=selected,
+            primary_model="google/gemini-3.1-pro-preview",
+            auxiliary_model="google/gemini-3.1-flash-lite",
+            api_base_url="https://openrouter.ai/api/v1/chat/completions",
+            api_key_environment="OPENROUTER_API_KEY",
+        )
+    else:
+        defaults = LLMConfig(
+            provider=selected,
+            primary_model="gemini-3.1-pro-preview",
+            auxiliary_model="gemini-3.1-flash-lite",
+            api_base_url="https://generativelanguage.googleapis.com/v1beta",
+            api_key_environment="GEMINI_API_KEY",
+        )
+    return LLMConfig(
+        provider=defaults.provider,
+        primary_model=primary_model or defaults.primary_model,
+        auxiliary_model=auxiliary_model or defaults.auxiliary_model,
+        api_base_url=defaults.api_base_url,
+        api_key_environment=defaults.api_key_environment,
+        temperature=defaults.temperature,
+        top_p=defaults.top_p,
+        max_output_tokens=defaults.max_output_tokens,
+        reasoning_effort=defaults.reasoning_effort,
+    )
+
+
+def description_config(config: LLMConfig) -> LLMConfig:
+    return replace(config, max_output_tokens=32_768,
+                   reasoning_effort="high" if config.auxiliary_model == "z-ai/glm-5.3-flash" else "medium")
 
 
 @dataclass(frozen=True)
@@ -111,6 +167,7 @@ class SingleSubhaloRSIConfig:
     kinematic_weight: float = 0.5
     freeze_smooth_model: bool = True
     lens_search_radius_einstein: float | None = None
+    staged: bool = False
     pso: PSOConfig = PSOConfig()
     budget: AgentBudget = AgentBudget(
         iterations=100,
@@ -229,6 +286,7 @@ class WorkflowProfile:
     dataset: DatasetKind
     model_families: tuple[str, ...]
     rsi: RSIConfig
+    observations: ObservationMode = ObservationMode.SDSS
     llm: LLMConfig = LLMConfig()
     afms: AFMSConfig = AFMSConfig()
     prl: PRLConfig = PRLConfig()
@@ -245,25 +303,55 @@ def sdss_profile() -> WorkflowProfile:
 
 
 def single_mock_profile() -> WorkflowProfile:
-    return WorkflowProfile(
+    return _hst_profile(WorkflowProfile(
         dataset=DatasetKind.SINGLE_MOCK,
         model_families=MOCK_MODEL_FAMILIES,
         rsi=SingleSubhaloRSIConfig(),
-    )
+    ))
 
 
 def multisubhalo_mock_profile() -> WorkflowProfile:
-    return WorkflowProfile(
+    return _hst_profile(WorkflowProfile(
         dataset=DatasetKind.MULTISUBHALO_MOCK,
         model_families=MOCK_MODEL_FAMILIES,
         rsi=FixedCountRSIConfig(),
+    ))
+
+
+def _hst_profile(profile: WorkflowProfile) -> WorkflowProfile:
+    rsi = profile.rsi
+    if isinstance(rsi, SingleSubhaloRSIConfig):
+        rsi = replace(rsi, staged=True, freeze_smooth_model=False)
+    rsi = replace(rsi, budget=replace(rsi.budget, context_entries=5))
+    return replace(
+        profile,
+        observations=ObservationMode.HST,
+        rsi=rsi,
+        llm=llm_config_for(
+            LLMProvider.OPENROUTER,
+            primary_model="z-ai/glm-5.3-flash",
+            auxiliary_model="z-ai/glm-5.3-flash",
+        ),
+        afms=replace(profile.afms, budget=replace(profile.afms.budget, context_entries=5)),
+        prl=replace(profile.prl, budget=replace(profile.prl.budget, context_entries=5)),
+        task_timeout_hours=72.0,
     )
+
+
+def hst_profile() -> WorkflowProfile:
+    return _hst_profile(WorkflowProfile(
+        dataset=DatasetKind.HST,
+        model_families=REAL_MODEL_FAMILIES,
+        rsi=SingleSubhaloRSIConfig(maximum_mass_msun=1.0e11),
+    ))
 
 
 def profile_for(dataset: DatasetKind | str) -> WorkflowProfile:
     kind = DatasetKind(dataset)
     if kind is DatasetKind.SDSS:
         return sdss_profile()
+    if kind is DatasetKind.HST:
+        return hst_profile()
     if kind is DatasetKind.SINGLE_MOCK:
         return single_mock_profile()
     return multisubhalo_mock_profile()

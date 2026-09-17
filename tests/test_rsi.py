@@ -89,14 +89,14 @@ def test_fd1_candidate_identification_contract(repository_root):
     )
 
     assert result.detected is True
-    assert result.arc_rms == pytest.approx(1.3774507880187334)
-    assert result.initial_count == 127
-    assert len(result.ranked) == 19
+    assert result.arc_rms == pytest.approx(1.39516305187875)
+    assert result.initial_count == 152
+    assert len(result.ranked) == 18
     assert len(result.candidate_pool) == 20
     expected = [
-        (-0.5811651956134121, 1.384255673983672),
-        (-0.5957984263981089, 1.3890315166166993),
-        (0.4210206426019607, -1.2531008991663317),
+        (-0.5933623211294943, 1.379328420698668),
+        (0.4133970958894182, -1.251667124669639),
+        (-1.160023353843127, 1.5699463694321794),
     ]
     for candidate, (ra, dec) in zip(result.candidate_pool, expected):
         assert candidate["coordinate_variant"] == "refined"

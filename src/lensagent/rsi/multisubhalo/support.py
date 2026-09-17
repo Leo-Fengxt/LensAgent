@@ -11,7 +11,7 @@ import random
 import time
 from collections import Counter, defaultdict, deque
 from collections.abc import Iterable, Sequence
-from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, wait
+from concurrent.futures import FIRST_COMPLETED, wait
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -25,6 +25,7 @@ from lensagent.output.artifacts import NumpyEncoder, write_json
 from lensagent.rsi.common import independent_nfw_space, nfw_mass_msun
 from lensagent.rsi.multisubhalo.artifacts import ensure_archive_context
 from lensagent.workflow.pso import run_family_pso
+from lensagent.workflow.processes import process_pool
 
 
 @dataclass(frozen=True)
@@ -545,7 +546,7 @@ def _evaluate_supports(
     submitted = 0
     exhausted = False
     pending = {}
-    with ProcessPoolExecutor(max_workers=config.workers) as executor:
+    with process_pool(config.workers) as executor:
         while pending or (
             not exhausted and submitted < maximum and time.monotonic() < deadline
         ):

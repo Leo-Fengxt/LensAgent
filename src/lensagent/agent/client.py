@@ -1,4 +1,4 @@
-"""OpenAI-compatible multimodal chat-completions transport."""
+"""Multimodal model transport for LensAgent."""
 
 from __future__ import annotations
 
@@ -6,12 +6,14 @@ import json
 import logging
 import threading
 import time
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 import requests
 
-from lensagent.config import LLMConfig
+from lensagent.config import LLMConfig, LLMProvider
 
 log = logging.getLogger(__name__)
 
@@ -29,6 +31,22 @@ class ChatCompletionsError(RuntimeError):
         self.status_code = status_code
         self.body = body
         super().__init__(f"HTTP {status_code}: {body[:500]}")
+
+
+class ChatResponse(str):
+    """Text response carrying native Gemini parts for the next chat turn."""
+
+    gemini_parts: list[dict[str, Any]] | None
+
+    def __new__(
+        cls,
+        value: str,
+        *,
+        gemini_parts: list[dict[str, Any]] | None = None,
+    ) -> ChatResponse:
+        instance = super().__new__(cls, value)
+        instance.gemini_parts = deepcopy(gemini_parts)
+        return instance
 
 
 class ChatCompletionsClient:
@@ -99,28 +117,16 @@ class ChatCompletionsClient:
             if count_toward_budget:
                 self.counted_calls += 1
 
-        payload: dict[str, Any] = {
-            "model": self.model,
-            "messages": messages,
-            "temperature": self.config.temperature
+        request_url, headers, payload = self._request(
+            messages,
+            temperature=self.config.temperature
             if temperature is None
             else temperature,
-            "max_tokens": self.config.max_output_tokens
+            max_tokens=self.config.max_output_tokens
             if max_tokens is None
             else max_tokens,
-            "top_p": self.config.top_p,
-            "reasoning": {
-                "effort": self.config.reasoning_effort,
-                "exclude": True,
-            },
-        }
-        if stop:
-            payload["stop"] = stop
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-            "X-Title": "LensAgent",
-        }
+            stop=stop,
+        )
 
         response = None
         elapsed = 0.0
@@ -128,7 +134,7 @@ class ChatCompletionsClient:
             started = time.monotonic()
             try:
                 response = requests.post(
-                    self.config.api_base_url,
+                    request_url,
                     headers=headers,
                     json=payload,
                     timeout=self.timeout_seconds,
@@ -142,10 +148,10 @@ class ChatCompletionsClient:
             if response.status_code == 200:
                 break
             body = response.text[:2000]
-            if "context" in body.lower() and "length" in body.lower():
+            if _is_context_error(body):
                 raise ContextLengthExceeded(body)
             if (
-                response.status_code in {429, 500, 502, 503, 520, 522, 524}
+                response.status_code in {429, 500, 502, 503, 504, 520, 522, 524}
                 and attempt < 4
             ):
                 time.sleep(8 * 2**attempt)
@@ -160,21 +166,119 @@ class ChatCompletionsClient:
             raise ChatCompletionsError(
                 response.status_code, response.text[:500]
             ) from exc
-        if not data.get("choices"):
-            message = data.get("error", {}).get("message") or str(data)[:800]
-            raise ChatCompletionsError(response.status_code, message)
 
-        choice = data["choices"][0]
-        content = choice.get("message", {}).get("content") or ""
-        if choice.get("finish_reason") == "context_length_exceeded":
-            raise ContextLengthExceeded(content)
-        usage = data.get("usage", {})
+        if self.config.provider is LLMProvider.GEMINI:
+            content, usage = self._parse_gemini_response(data, response.status_code)
+        else:
+            content, usage = self._parse_chat_completions_response(
+                data, response.status_code
+            )
+
         with self._lock:
             self.prompt_tokens += int(usage.get("prompt_tokens") or 0)
             self.completion_tokens += int(usage.get("completion_tokens") or 0)
             self.cost += float(usage.get("cost") or 0.0)
         self._record(request_id, messages, content, usage, elapsed)
         return content
+
+    def _request(
+        self,
+        messages: list[dict[str, Any]],
+        *,
+        temperature: float,
+        max_tokens: int,
+        stop: list[str] | None,
+    ) -> tuple[str, dict[str, str], dict[str, Any]]:
+        if self.config.provider is LLMProvider.GEMINI:
+            model = self.model.removeprefix("models/")
+            if not model or any(character in model for character in "/:?#"):
+                raise ValueError(f"invalid native Gemini model name: {self.model}")
+            url = (
+                f"{self.config.api_base_url.rstrip('/')}/models/"
+                f"{quote(model, safe='._-')}:generateContent"
+            )
+            headers = {
+                "x-goog-api-key": self.api_key,
+                "Content-Type": "application/json",
+            }
+            payload = _gemini_payload(
+                messages,
+                model=model,
+                temperature=temperature,
+                top_p=self.config.top_p,
+                max_tokens=max_tokens,
+                reasoning_effort=self.config.reasoning_effort,
+                stop=stop,
+            )
+            return url, headers, payload
+
+        payload: dict[str, Any] = {
+            "model": self.model,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "top_p": self.config.top_p,
+            "reasoning": {
+                "effort": self.config.reasoning_effort,
+                "exclude": True,
+            },
+        }
+        if stop:
+            payload["stop"] = stop
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+        return self.config.api_base_url, headers, payload
+
+    @staticmethod
+    def _parse_chat_completions_response(
+        data: dict[str, Any], status_code: int
+    ) -> tuple[str, dict[str, Any]]:
+        if not data.get("choices"):
+            message = data.get("error", {}).get("message") or str(data)[:800]
+            raise ChatCompletionsError(status_code, message)
+
+        choice = data["choices"][0]
+        content = choice.get("message", {}).get("content") or ""
+        if choice.get("finish_reason") == "context_length_exceeded":
+            raise ContextLengthExceeded(content)
+        return str(content), data.get("usage", {})
+
+    @staticmethod
+    def _parse_gemini_response(
+        data: dict[str, Any], status_code: int
+    ) -> tuple[ChatResponse, dict[str, Any]]:
+        candidates = data.get("candidates") or []
+        if not candidates:
+            error = data.get("error", {}).get("message")
+            feedback = data.get("promptFeedback", {}).get("blockReason")
+            raise ChatCompletionsError(
+                status_code, str(error or feedback or data)[:800]
+            )
+        candidate = candidates[0]
+        parts = candidate.get("content", {}).get("parts") or []
+        text = "".join(
+            str(part.get("text") or "")
+            for part in parts
+            if not part.get("thought")
+        )
+        if not text:
+            reason = candidate.get("finishReason") or "empty response"
+            raise ChatCompletionsError(status_code, str(reason))
+
+        metadata = data.get("usageMetadata") or {}
+        response_tokens = int(metadata.get("candidatesTokenCount") or 0)
+        thought_tokens = int(metadata.get("thoughtsTokenCount") or 0)
+        usage = {
+            "prompt_tokens": int(metadata.get("promptTokenCount") or 0),
+            "completion_tokens": response_tokens + thought_tokens,
+            "response_tokens": response_tokens,
+            "reasoning_tokens": thought_tokens,
+            "total_tokens": int(metadata.get("totalTokenCount") or 0),
+            "cost": 0.0,
+        }
+        return ChatResponse(text, gemini_parts=parts), usage
 
     def _record(
         self,
@@ -224,3 +328,93 @@ def strip_image_data(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
             parts.append(part)
         result.append({**message, "content": parts})
     return result
+
+
+def _is_context_error(body: str) -> bool:
+    lowered = body.lower()
+    return (
+        "context" in lowered and ("length" in lowered or "window" in lowered)
+    ) or ("token count" in lowered and "exceed" in lowered)
+
+
+def _gemini_payload(
+    messages: list[dict[str, Any]],
+    *,
+    model: str,
+    temperature: float,
+    top_p: float,
+    max_tokens: int,
+    reasoning_effort: str,
+    stop: list[str] | None,
+) -> dict[str, Any]:
+    system_parts: list[dict[str, Any]] = []
+    contents: list[dict[str, Any]] = []
+    for message in messages:
+        role = str(message.get("role") or "")
+        if role == "system":
+            system_parts.extend(_gemini_parts(message.get("content"), role=role))
+            continue
+        if role not in {"user", "assistant"}:
+            raise ValueError(f"unsupported Gemini message role: {role}")
+        contents.append(
+            {
+                "role": "model" if role == "assistant" else "user",
+                "parts": _gemini_parts(message.get("content"), role=role),
+            }
+        )
+    if not contents:
+        raise ValueError("Gemini requests require at least one user message")
+
+    generation_config: dict[str, Any] = {
+        "temperature": temperature,
+        "topP": top_p,
+        "maxOutputTokens": max_tokens,
+    }
+    if model.startswith("gemini-3"):
+        generation_config["thinkingConfig"] = {
+            "thinkingLevel": reasoning_effort.lower(),
+            "includeThoughts": False,
+        }
+    if stop:
+        generation_config["stopSequences"] = stop
+    payload: dict[str, Any] = {
+        "contents": contents,
+        "generationConfig": generation_config,
+    }
+    if system_parts:
+        payload["systemInstruction"] = {"parts": system_parts}
+    return payload
+
+
+def _gemini_parts(content: Any, *, role: str) -> list[dict[str, Any]]:
+    if role == "assistant" and isinstance(content, ChatResponse):
+        if content.gemini_parts:
+            return deepcopy(content.gemini_parts)
+    if isinstance(content, str):
+        return [{"text": content}]
+    if not isinstance(content, list):
+        raise ValueError(f"unsupported Gemini message content: {type(content).__name__}")
+
+    parts = []
+    for part in content:
+        if not isinstance(part, dict):
+            raise ValueError("Gemini message parts must be objects")
+        part_type = part.get("type")
+        if part_type == "text":
+            parts.append({"text": str(part.get("text") or "")})
+        elif part_type == "image_url" and role != "system":
+            image = part.get("image_url") or {}
+            parts.append(_gemini_image_part(str(image.get("url") or "")))
+        else:
+            raise ValueError(f"unsupported Gemini message part: {part_type}")
+    return parts
+
+
+def _gemini_image_part(url: str) -> dict[str, Any]:
+    header, separator, data = url.partition(",")
+    if not separator or not header.startswith("data:") or ";base64" not in header:
+        raise ValueError("native Gemini image inputs must be base64 data URLs")
+    mime_type = header[5:].split(";", 1)[0]
+    if not mime_type.startswith("image/") or not data:
+        raise ValueError("invalid image data URL")
+    return {"inlineData": {"mimeType": mime_type, "data": data}}

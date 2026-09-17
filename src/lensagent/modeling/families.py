@@ -82,7 +82,7 @@ def _records() -> dict[str, Any]:
 def family_registry(dataset: DatasetKind | str) -> Mapping[str, ModelFamily]:
     """Load the model-family set for a dataset."""
     kind = DatasetKind(dataset)
-    group = "sdss" if kind is DatasetKind.SDSS else "mock"
+    group = "sdss" if kind in {DatasetKind.SDSS, DatasetKind.HST} else "mock"
     expected = REAL_MODEL_FAMILIES if group == "sdss" else MOCK_MODEL_FAMILIES
     records = _records()[group]
     if tuple(records) != expected:

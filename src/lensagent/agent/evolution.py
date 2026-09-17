@@ -80,6 +80,10 @@ class IslandSearch:
         self.rng = np.random.default_rng(random_seed)
         self._database_lock = threading.Lock()
         self._event_lock = threading.Lock()
+        if observation.hst:
+            from lensagent.agent.refinement import RefinementPolicy
+
+            self.database.refinement = RefinementPolicy(observation, scoring)
 
     def run_episode(self, iteration: int) -> EpisodeOutcome:
         started = time.monotonic()
@@ -105,17 +109,14 @@ class IslandSearch:
             self.scoring,
             **episode_kwargs,
         )
+        exhausted = False
         try:
             episode.run(references)
         except CallBudgetExhausted:
-            return EpisodeOutcome(
-                iteration=iteration,
-                island=island,
-                admitted=(),
-                rejected=(),
-                elapsed_seconds=time.monotonic() - started,
-                exhausted_budget=True,
-            )
+            exhausted = True
+            if not self.observation.hst:
+                return EpisodeOutcome(iteration, island, (), (), time.monotonic() - started,
+                                      exhausted_budget=True)
         except Exception as exc:
             log.exception("LensAgent episode %d failed", iteration)
             return EpisodeOutcome(
@@ -141,7 +142,8 @@ class IslandSearch:
                         }
                     )
                     continue
-                if self.scoring.is_duplicate(proposal, self.database.proposals()):
+                if (self.database.refinement is None
+                        and self.scoring.is_duplicate(proposal, self.database.proposals())):
                     rejected.append(
                         {
                             "proposal_index": candidate["proposal_index"],
@@ -158,6 +160,14 @@ class IslandSearch:
                     [item.quality for item in island_records],
                     [item.diversity for item in island_records],
                 )
+                if self.database.refinement is not None:
+                    decision = self.database.refinement.decide(record, self.database.records, reason)
+                    if decision["outcome"] != "admitted":
+                        rejected.append({"proposal_index": candidate["proposal_index"], **decision})
+                        continue
+                    if decision.get("replaced_id"):
+                        self.database.remove(decision["replaced_id"])
+                    reason = decision["admission_reason"]
                 if reason == "dominated":
                     rejected.append(
                         {
@@ -178,6 +188,7 @@ class IslandSearch:
             admitted=tuple(admitted),
             rejected=tuple(rejected),
             elapsed_seconds=time.monotonic() - started,
+            exhausted_budget=exhausted,
         )
 
     def run(

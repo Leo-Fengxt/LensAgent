@@ -13,9 +13,11 @@ import numpy as np
 
 from lensagent.agent.client import ChatCompletionsClient
 from lensagent.config import (
+    DatasetKind,
     FixedCountRSIConfig,
     SingleSubhaloRSIConfig,
     WorkflowProfile,
+    description_config,
 )
 from lensagent.data.observation import Observation
 from lensagent.modeling.families import family_registry
@@ -149,6 +151,14 @@ def run_workflow(
             f"observation dataset {observation.dataset.value} does not match "
             f"profile {profile.dataset.value}"
         )
+    if observation.dataset is DatasetKind.HST:
+        from lensagent.data.hst.bundle import validate_bundle
+
+        validate_bundle(observation)
+    elif observation.hst:
+        from lensagent.data.mocks import validate_mock
+
+        validate_mock(observation)
     output = Path(output_directory)
     output.mkdir(parents=True, exist_ok=True)
     registry = family_registry(profile.dataset)
@@ -187,8 +197,14 @@ def run_workflow(
         raise ValueError(f"set {profile.llm.api_key_environment} or supply an API key")
     primary = ChatCompletionsClient(key, profile.llm)
     auxiliary = ChatCompletionsClient(
-        key, profile.llm, model=profile.llm.auxiliary_model
+        key, description_config(profile.llm) if observation.hst else profile.llm,
+        model=profile.llm.auxiliary_model
     )
+    observation.save(output / "observation.npz")
+    if observation.hst:
+        from lensagent.workflow.processes import configure_cpu_runtime
+
+        configure_cpu_runtime()
 
     _set_traces(primary, auxiliary, output / "afms")
     afms = run_afms(
@@ -232,7 +248,12 @@ def run_workflow(
     final_proposal = prl_proposal
     final_evaluation = prl_evaluation
     if isinstance(profile.rsi, SingleSubhaloRSIConfig):
-        rsi: SingleRSIResult = run_single_rsi(
+        single_runner = run_single_rsi
+        if profile.rsi.staged:
+            from lensagent.rsi.staged import run_staged_rsi
+
+            single_runner = run_staged_rsi
+        rsi: SingleRSIResult = single_runner(
             prl,
             afms.states,
             primary,

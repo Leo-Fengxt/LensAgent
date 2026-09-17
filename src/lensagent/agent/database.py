@@ -43,6 +43,7 @@ class ProposalDatabase:
     def __init__(self, path: str | Path, scoring: ScoringPolicy):
         self.path = Path(path)
         self.scoring = scoring
+        self.refinement = None
         self._records: list[ProposalRecord] = []
         self._lock = threading.Lock()
         if self.path.exists() and self.path.stat().st_size > 2:
@@ -103,6 +104,8 @@ class ProposalDatabase:
     def sample(
         self, count: int, rng: np.random.Generator, *, island: int | None = None
     ) -> list[ProposalRecord]:
+        if self.refinement is not None:
+            return self.refinement.sample(self._records, count, rng, island)
         pool = (
             [record for record in self._records if record.island == island]
             if island is not None
@@ -127,7 +130,8 @@ class ProposalDatabase:
             pool = self.records_in_island(island)
             if len(pool) <= maximum:
                 return 0
-            keep: set[str] = set()
+            keep: set[str] = (self.refinement.protected_ids(self._records)
+                              if self.refinement is not None else set())
             for record in sorted(pool, key=lambda item: item.quality, reverse=True)[
                 : round(maximum * 0.6)
             ]:
@@ -181,6 +185,12 @@ class ProposalDatabase:
             for record in self._records
         ]
         write_json(self.path, records)
+
+    def remove(self, record_id: str) -> None:
+        with self._lock:
+            self._records = [record for record in self._records if record.id != record_id]
+            self._refresh_unlocked()
+            self.save()
 
     def load(self) -> None:
         data = json.loads(self.path.read_text(encoding="utf-8"))

@@ -28,9 +28,11 @@ dependencies = [
   "scikit-image>=0.26,<1",
   "scipy>=1.18,<2",
   "sdss-access>=3.0,<4",
+  "threadpoolctl>=3.6,<4",
 ]
 
 [project.optional-dependencies]
+hst = ["drizzle>=2.2,<3", "stwcs>=1.7,<2", "astroscrappy>=1.3,<2"]
 test = [
   "pytest>=9.1,<10",
 ]

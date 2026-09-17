@@ -89,5 +89,7 @@
   "subhalo_R_theta_E": null,
   "subhalo_position": null,
   "npix": 120,
-  "deltapix": 0.05
+  "deltapix": 0.05,
+  "exposure_seconds": 1000.0,
+  "noise_seed": 1954049099
 }

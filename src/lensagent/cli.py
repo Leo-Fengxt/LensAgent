@@ -10,13 +10,13 @@ import signal
 import subprocess
 import sys
 import time
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from datetime import UTC, datetime
 from importlib.resources import as_file, files
 from pathlib import Path
 from typing import Any
 
-from lensagent.config import DatasetKind, profile_for
+from lensagent.config import DatasetKind, LLMProvider, llm_config_for, profile_for
 from lensagent.data.catalog import Catalog
 from lensagent.data.observation import Observation
 from lensagent.data.sdss import prepare_sdss_observation
@@ -25,11 +25,13 @@ from lensagent.workflow.pipeline import run_workflow
 
 DATASET_NAMES = {
     "sdss": DatasetKind.SDSS,
+    "hst": DatasetKind.HST,
     "single-mock": DatasetKind.SINGLE_MOCK,
     "multisubhalo-mock": DatasetKind.MULTISUBHALO_MOCK,
 }
 CATALOG_NAMES = {
     DatasetKind.SDSS: "sdss.csv",
+    DatasetKind.HST: "hst.csv",
     DatasetKind.SINGLE_MOCK: "single_mocks.csv",
     DatasetKind.MULTISUBHALO_MOCK: "multisubhalo_mocks.csv",
 }
@@ -73,7 +75,7 @@ def _default_data_root() -> Path:
     configured = os.environ.get("LENSAGENT_DATA")
     if configured:
         return Path(configured).expanduser().resolve()
-    repository_data = Path(__file__).resolve().parents[2] / "data"
+    repository_data = Path(__file__).resolve().parents[3] / "data"
     if repository_data.exists():
         return repository_data
     return (Path.cwd() / "data").resolve()
@@ -104,6 +106,10 @@ def _load_observation(
     observation = Observation.load(path)
     if observation.system_id != system_id or observation.dataset is not dataset:
         raise ValueError(f"observation identity does not match catalog entry: {path}")
+    if dataset is DatasetKind.HST:
+        from lensagent.data.hst.bundle import validate_bundle
+
+        validate_bundle(observation)
     return observation
 
 
@@ -152,8 +158,28 @@ def _selected_systems(args: argparse.Namespace, catalog: Catalog) -> list[str]:
 
 
 def _prepare_command(args: argparse.Namespace) -> int:
+    if args.dataset is DatasetKind.HST:
+        from lensagent.data.hst.prepare import PreparationConfig, prepare_hst_observation
+        from lensagent.data.hst.sources import load_sources, MANIFEST
+
+        sources = {row["system_id"]: row for row in load_sources(args.source_manifest or MANIFEST)}
+        region_file = args.regions or files("lensagent.resources").joinpath("manifests", "hst_regions.json")
+        regions = json.loads(region_file.read_text())
+        for system in _selected_systems(args, _catalog(args.dataset)):
+            path = prepare_hst_observation(sources[system], args.data_root / "hst",
+                PreparationConfig(), regions=regions.get(system, {}), library_path=args.psf_library)
+            print(path)
+        return 0
     if args.dataset is not DatasetKind.SDSS:
-        raise ValueError("packaged mock observations do not require preparation")
+        from lensagent.data.mocks import render_mock
+
+        for system in _selected_systems(args, _catalog(args.dataset)):
+            path = _observation_path(args.data_root, args.dataset, system)
+            template = Observation.load(path)
+            truth = json.loads((args.data_root / "benchmarks" / args.dataset.value / system / "parameters.json").read_text())
+            observation, _ = render_mock(template, truth, exposure_seconds=truth["exposure_seconds"], seed=truth["noise_seed"])
+            print(observation.save(path))
+        return 0
     catalog = _catalog(args.dataset)
     systems = _selected_systems(args, catalog)
     for system_id in systems:
@@ -191,9 +217,11 @@ def _run_command(args: argparse.Namespace) -> int:
             args.system,
             prepare_sdss=not args.no_auto_prepare,
         )
+        profile = profile_for(args.dataset)
+        profile = replace(profile, llm=_llm_configuration(profile, args))
         result = run_workflow(
             observation,
-            profile_for(args.dataset),
+            profile,
             output,
             random_seed=args.seed,
         )
@@ -310,6 +338,12 @@ def _campaign_command(args: argparse.Namespace) -> int:
             "--seed",
             str(args.seed),
         ]
+        if args.provider:
+            command.extend(["--provider", args.provider])
+        if args.primary_model:
+            command.extend(["--primary-model", args.primary_model])
+        if args.auxiliary_model:
+            command.extend(["--auxiliary-model", args.auxiliary_model])
         if args.no_auto_prepare:
             command.append("--no-auto-prepare")
         process = subprocess.Popen(
@@ -390,10 +424,10 @@ def _campaign_command(args: argparse.Namespace) -> int:
 def _common_dataset(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--dataset",
-        required=True,
         type=_dataset,
-        metavar="{sdss,single-mock,multisubhalo-mock}",
+        metavar="{sdss,hst,single-mock,multisubhalo-mock}",
     )
+    parser.add_argument("--observations", choices=("sdss", "HST"))
     parser.add_argument("--data-root", type=Path, default=_default_data_root())
 
 
@@ -404,6 +438,30 @@ def _system_selection(parser: argparse.ArgumentParser) -> None:
     selection.add_argument("--all", action="store_true")
 
 
+def _llm_options(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--provider",
+        choices=tuple(provider.value for provider in LLMProvider),
+    )
+    parser.add_argument("--primary-model")
+    parser.add_argument("--auxiliary-model")
+
+
+def _llm_configuration(profile, args):
+    provider = LLMProvider(args.provider) if args.provider else profile.llm.provider
+    same = provider is profile.llm.provider
+    return llm_config_for(provider,
+        primary_model=args.primary_model or (profile.llm.primary_model if same else None),
+        auxiliary_model=args.auxiliary_model or (profile.llm.auxiliary_model if same else None))
+
+
+def _approve_command(args):
+    from lensagent.data.hst.prepare import approve_preparation
+
+    print(approve_preparation(args.draft, args.output, args.review))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="lensagent")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -412,13 +470,22 @@ def build_parser() -> argparse.ArgumentParser:
     _common_dataset(catalog)
     catalog.set_defaults(handler=_catalog_command)
 
-    prepare = commands.add_parser("prepare", help="prepare SDSS observations")
+    prepare = commands.add_parser("prepare", help="prepare calibrated observations")
     _common_dataset(prepare)
     _system_selection(prepare)
     prepare.add_argument("--band", default="i", choices=("u", "g", "r", "i", "z"))
     prepare.add_argument("--cutout-half-size", type=int, default=60)
     prepare.add_argument("--background-box-size", type=int, default=25)
+    prepare.add_argument("--source-manifest", type=Path)
+    prepare.add_argument("--regions", type=Path)
+    prepare.add_argument("--psf-library", type=Path)
     prepare.set_defaults(handler=_prepare_command)
+
+    approve = commands.add_parser("approve", help="approve inspected HST inputs")
+    approve.add_argument("--draft", type=Path, required=True)
+    approve.add_argument("--review", type=Path, required=True)
+    approve.add_argument("--output", type=Path, required=True)
+    approve.set_defaults(handler=_approve_command)
 
     run = commands.add_parser("run", help="run one lens system")
     _common_dataset(run)
@@ -426,6 +493,7 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--output", type=Path, required=True)
     run.add_argument("--seed", type=int, default=20260401)
     run.add_argument("--no-auto-prepare", action="store_true")
+    _llm_options(run)
     run.set_defaults(handler=_run_command)
 
     campaign = commands.add_parser("campaign", help="run a catalog campaign")
@@ -436,6 +504,7 @@ def build_parser() -> argparse.ArgumentParser:
     campaign.add_argument("--task-timeout-hours", type=float)
     campaign.add_argument("--seed", type=int, default=20260401)
     campaign.add_argument("--no-auto-prepare", action="store_true")
+    _llm_options(campaign)
     campaign.set_defaults(handler=_campaign_command)
     return parser
 
@@ -443,6 +512,13 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    if hasattr(args, "dataset"):
+        if args.dataset is None:
+            if args.observations is None:
+                parser.error("select --dataset or --observations")
+            args.dataset = DatasetKind.HST if args.observations == "HST" else DatasetKind.SDSS
+        if args.observations and args.observations != profile_for(args.dataset).observations.value:
+            parser.error("dataset and observation mode do not match")
     if getattr(args, "concurrency", 1) < 1:
         parser.error("concurrency must be positive")
     timeout = getattr(args, "task_timeout_hours", None)

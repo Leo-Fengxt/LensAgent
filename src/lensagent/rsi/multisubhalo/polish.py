@@ -9,7 +9,7 @@ import os
 import random
 import time
 from collections.abc import Sequence
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import as_completed
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -24,6 +24,7 @@ from lensagent.rsi.common import configure_tied_mass_space, tied_mass_nfw_space
 from lensagent.rsi.multisubhalo.artifacts import ensure_archive_context
 from lensagent.rsi.multisubhalo.support import ExactCountSelection
 from lensagent.workflow.pso import run_family_pso
+from lensagent.workflow.processes import process_pool
 
 
 @dataclass(frozen=True)
@@ -278,7 +279,7 @@ def _run_stage(
             }
         )
     results = list(completed.values())
-    with ProcessPoolExecutor(max_workers=config.workers) as executor:
+    with process_pool(config.workers) as executor:
         futures = [executor.submit(_fit_replica, payload) for payload in payloads]
         for future in as_completed(futures):
             fit = future.result()
